@@ -1,5 +1,44 @@
-const C="sidari-quest-v1";
-const F=["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-180.png", "assets/dave_confused.webp", "assets/dave_cringe.webp", "assets/dave_full.webp", "assets/dave_fuming.webp", "assets/dave_normal.webp", "assets/dave_proud.webp", "assets/dave_shocked.webp", "assets/dave_talking.webp", "assets/logo.webp", "assets/sharon_confused.webp", "assets/sharon_cringe.webp", "assets/sharon_full.webp", "assets/sharon_fuming.webp", "assets/sharon_normal.webp", "assets/sharon_proud.webp", "assets/sharon_shocked.webp", "assets/sharon_talking.webp", "assets/tagline.webp", "assets/title_bg.webp"];
-self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(F)).then(()=>self.skipWaiting()))});
-self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
-self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});
+importScripts("assets/chapter1-art.js");
+
+const PREFIX = "sidari-quest-";
+const CACHE = PREFIX + "playtest-v2";
+const SHELL = [
+  "./", "index.html", "manifest.json", "chapter1.js", "progress.js",
+  "icon-180.png", "icon-192.png", "icon-512.png", "assets/chapter1-art.js"
+];
+const players = ["dave", "sharon"].flatMap(character =>
+  ["full", "normal", "proud", "confused", "cringe", "fuming", "shocked", "talking"]
+    .map(mood => character + "_" + mood)
+);
+const art = [...new Set(["title_bg", "tagline", "logo", ...players, ...GAME_ART])]
+  .map(name => "assets/" + name + ".webp");
+
+self.addEventListener("install", event => {
+  event.waitUntil(caches.open(CACHE).then(cache =>
+    cache.addAll([...SHELL, ...art].map(path => new Request(
+      new URL(path, self.registration.scope), {cache: "reload"}
+    )))
+  ).then(() => self.skipWaiting()));
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys
+    .filter(key => key.startsWith(PREFIX) && key !== CACHE)
+    .map(key => caches.delete(key))
+  )).then(() => self.clients.claim()));
+});
+
+self.addEventListener("fetch", event => {
+  const request = event.request;
+  if (request.method !== "GET" || !request.url.startsWith(self.registration.scope)) return;
+  event.respondWith(caches.open(CACHE).then(async cache => {
+    if (request.mode === "navigate") {
+      const url = new URL(request.url);
+      const home = new URL(self.registration.scope);
+      if ([home.pathname, home.pathname + "index.html"].includes(url.pathname)) {
+        return (await cache.match(home)) || fetch(request);
+      }
+    }
+    return (await cache.match(request)) || fetch(request);
+  }));
+});
