@@ -2,7 +2,7 @@
 const CHAPTER={
   id:"chapter1",
   steps:[
-    {t:"narr",scene:"landing",text:{m:"Sharon points out Corfu coming into view. Dave sleeps through the landing. He's been awake since they left the UK, telling anyone who'll listen about the apartment buffet.",f:"Sharon spots Corfu through the plane window. She nudges Dave to show him. He snores right through it."}},
+    {t:"narr",scene:"landing",text:{m:"Sharon films Corfu coming into view. Dave sleeps through the landing. He's been awake since they left the UK, telling anyone who'll listen about the apartment buffet.",f:"Sharon finally gets a clear shot of Corfu out the plane window. Then Dave's snoring makes it onto the recording."}},
     {t:"narr",scene:"baggage",text:{m:"The carousel makes one last turn. Dave's case appears. Two pairs of shorts, one shirt and enough van magnets to rebrand the entire airport.",f:"The carousel makes one last turn. Sharon grabs the case before Dave can put his back out. Again."}},
     {t:"narr",scene:"arrivals",text:"The rep points to the transfer coach. Dave eyes the queue and heads for the hire office. Sharon follows. Someone has to read the paperwork."},
     {t:"narr",scene:"van",wide:true,text:"Corfu Airport. 35°C. A white van sits outside the hire office. Dave booked it months ago and has brought the magnets to prove it."},
