@@ -2,7 +2,7 @@
 
 ## Open the game
 
-Use the HTTPS testing link in the pull request. GitHub Pages uses the development branch with the **Chapter 1 playtest** workflow. Its expected URL is [bigdavegaming.github.io/SidariQuest](https://bigdavegaming.github.io/SidariQuest/).
+Use the private HTTPS playtest link shared with the preview owner, then sign in with the ChatGPT account that owns the preview. GitHub Pages uses the development branch with the **Chapter 1 playtest** workflow. Its expected URL is [bigdavegaming.github.io/SidariQuest](https://bigdavegaming.github.io/SidariQuest/).
 
 If Pages is disabled, a repository administrator can open [Settings → Pages](https://github.com/BigDaveGaming/SidariQuest/settings/pages), select **GitHub Actions** under **Build and deployment → Source**, and allow `feature/chapter1-mobile-playtest` in the `github-pages` environment's deployment branch policy if restrictions are enabled. Then re-run the latest **Chapter 1 playtest** workflow from [Actions](https://github.com/BigDaveGaming/SidariQuest/actions). If there is no run to re-run, push a commit to the development branch to trigger it. Verify the run's deployment URL before sharing it.
 

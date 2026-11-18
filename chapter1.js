@@ -104,4 +104,3 @@ const CHAPTER={
     {t:"narr",scene:"apartment",text:{m:"Back at the apartment, Eleni brings figs. Dave puts them on a plate and calls it the opening of the buffet. Sharon points out that he’s doing the washing up.",f:"Eleni brings figs. Sharon cracks open the water and puts the phone down. Dave asks when the buffet opens. “Soon as you learn to cook, luv.”"},face:"proud"}
   ]
 };
-
