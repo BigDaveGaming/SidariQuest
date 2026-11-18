@@ -32,7 +32,7 @@ def play(page, character, retry=False, resume=False):
         if step.get("wide"):
             assert page.locator("#cast").is_hidden()
         if page.locator("#cast").is_visible():
-            local = page.locator("#localName").inner_text()
+            local = page.locator("#localFigure").get_attribute("alt")
             if local not in seen_locals:
                 seen_locals.add(local)
                 assert page.locator("#player").get_attribute("src") == (
@@ -49,7 +49,8 @@ def play(page, character, retry=False, resume=False):
                     bounds = image.bounding_box()
                     assert stage and bounds
                     assert stage["y"] <= bounds["y"] and bounds["height"] > 0
-                    assert bounds["y"] + bounds["height"] <= stage["y"] + stage["height"]
+                    assert bounds["y"] + bounds["height"] > stage["y"] + stage["height"]
+                    assert bounds["y"] + 45 < stage["y"] + stage["height"]
 
         if step["t"] == "q":
             correct = next(o for o in step["opts"] if o.get("ok"))
