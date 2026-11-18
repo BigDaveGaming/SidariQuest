@@ -56,14 +56,10 @@ button{font-family:inherit;cursor:pointer}
 .scene{position:relative;flex:1;min-height:0;overflow:hidden}
 .bg{position:absolute;inset:0}
 .gsign{position:absolute;left:18%;right:18%;top:17%;padding:5px 6px;background:#fff;border:3px solid var(--blue);border-radius:6px;text-align:center;color:var(--blue);font-weight:900;font-size:clamp(12px,3.6vw,17px);letter-spacing:.5px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
-.player,.local{position:absolute;bottom:0;transition:transform .25s}
-.player{left:-4%;width:60%;max-height:96%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 0 6px rgba(0,0,0,.3))}
 .player.bump{animation:bump .35s}
 .player.shake{animation:shake .4s}
 @keyframes bump{50%{transform:translateY(-12px) scale(1.03)}}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
-.local{right:3%;width:38%;bottom:6%;display:flex;flex-direction:column;align-items:center}
-.local .tag{margin-top:6px;background:var(--deep);color:#fff;font-weight:800;font-size:12px;padding:3px 9px;border-radius:10px;white-space:nowrap}
 
 .panel{position:relative;z-index:4;background:var(--paper);border-top:4px solid var(--deep);border-radius:20px 20px 0 0;padding:12px 14px calc(env(safe-area-inset-bottom) + 12px);max-height:62%;overflow-y:auto;box-shadow:0 -6px 16px rgba(0,0,0,.35)}
 .who{display:inline-block;background:var(--blue);color:#fff;font-weight:800;font-size:12px;padding:2px 10px;border-radius:10px;margin-bottom:6px}
@@ -101,7 +97,7 @@ button{font-family:inherit;cursor:pointer}
 #end{background:linear-gradient(#2893fc,#ffe2a8);overflow-y:auto}
 #end .wrap{padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 24px);text-align:center}
 #end h1{color:#fff;text-shadow:0 3px 0 var(--deep);margin:6px 0}
-#end .face{width:58%;max-width:260px}
+#end .face{width:48%;max-width:220px;max-height:290px;object-fit:contain}
 .score{font-size:18px;font-weight:800;color:var(--deep);margin:6px 0 14px}
 .learned{text-align:left;background:var(--paper);border:3px solid var(--deep);border-radius:16px;padding:10px 12px;margin-bottom:14px}
 .learned h3{margin:2px 0 8px;color:var(--deep)}
@@ -135,10 +131,11 @@ button{font-family:inherit;cursor:pointer}
 .top,.panel,.wrap,.sheet{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
 .bg{background:linear-gradient(#2893fc,#bfe3ff 60%,#e8c68a);background-size:cover;background-position:center 44%}
 .gsign{top:8px;left:7%;right:7%;font-size:clamp(12px,3.4vw,16px)}
-.player{left:0;width:55%;max-height:83%}
-.local{bottom:8px;max-height:82%;justify-content:flex-end}
-.local img{max-width:100%;min-height:0;object-fit:contain}
-.local .tag{white-space:normal;text-align:center}
+.cast{position:absolute;inset:42px 10px 8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;pointer-events:none}
+.actor{min-width:0;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:4px}
+.actor img{width:100%;height:100%;min-height:0;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 3px 3px rgba(0,0,0,.28))}
+.actor img.mirror{transform:scaleX(-1)}
+.actor .tag{justify-self:center;text-align:center;background:var(--deep);color:#fff;font-weight:800;font-size:12px;padding:3px 9px;border-radius:10px}
 .panel{max-height:68%;flex-shrink:0;overscroll-behavior:contain;scroll-padding:8px}
 .opt,.btn,.tile,.say,.lr .say,.tog,.x,.reveal{min-height:44px}
 .say,.lr .say,.x{min-width:44px}
@@ -196,10 +193,15 @@ button{font-family:inherit;cursor:pointer}
     <div class="bg vanhire">
     </div>
     <div class="gsign" id="sceneSign"></div>
-    <img class="player" id="player" alt="">
-    <div class="local" id="local">
-      <img id="localPortrait" alt="" hidden>
-      <div class="tag" id="localName"></div>
+    <div class="cast" id="cast" hidden>
+      <div class="actor">
+        <img class="player" id="player" alt="">
+        <div class="tag" id="playerName"></div>
+      </div>
+      <div class="actor">
+        <img id="localFigure" alt="">
+        <div class="tag" id="localName"></div>
+      </div>
     </div>
   </div>
   <div class="panel" id="panel" tabindex="-1"></div>
@@ -323,29 +325,25 @@ const SCENES={
   kitchen:{name:"The kitchen", art:"bg_apartment_kitchen", local:"Kyria Eleni"},
   market:{name:"The mini-market", art:"bg_minimarket", local:"Fat Spyros"}
 };
-const PORTRAITS={
-  "Spyros Rent-a-Van":["spyros_van_normal","spyros_van_proud","spyros_van_confused"],
-  "Kyria Eleni":["eleni_normal","eleni_pleased","eleni_exasperated"],
-  "Kyrios Spyros":["kyrios_spyros_normal","kyrios_spyros_explaining","kyrios_spyros_stern"],
-  "Fat Spyros":["fat_spyros_normal","fat_spyros_laughing","fat_spyros_fed_up"]
+const LOCAL_FIGURES={
+  "Spyros Rent-a-Van":"spyros_van_full",
+  "Kyria Eleni":"eleni_full",
+  "Kyrios Spyros":"kyrios_spyros_full",
+  "Fat Spyros":"fat_spyros_full"
 };
 let run, runKey, idx, speaker;
 const steps=CHAPTER.steps;
 const qTotal=steps.filter(s=>s.t==="q"||s.t==="build").length;
 const player=$("#player"), panel=$("#panel");
-const portraitPath=f=>`assets/${S.c==="f"?"sharon":"dave"}_${f}.webp`;
-function face(f,anim){
-  player.src=portraitPath(f);
-  if(anim){player.classList.remove("bump","shake");void player.offsetWidth;player.classList.add(anim)}
+const playerPath=()=>`assets/${S.c==="f"?"sharon":"dave"}_full.webp`;
+function react(animation){
+  player.classList.remove("bump","shake");
+  if(animation){void player.offsetWidth;player.classList.add(animation)}
 }
 function artPath(name){return name && GAME_ART.includes(name) ? `assets/${name}.webp` : ""}
-function mood(state=0){
-  const src=artPath(PORTRAITS[speaker]?.[state]) || artPath(PORTRAITS[speaker]?.[0]);
-  const portrait=$("#localPortrait");
-  if(src) portrait.src=src;
-  portrait.hidden=!src;
-}
 function startLesson(){
+  player.src=playerPath();
+  $("#playerName").textContent=NAME();
   runKey=`${CHAPTER.id}-${S.c}`;
   const saved=S.runs[runKey];
   run=saved && Number.isInteger(saved.idx) && steps[saved.idx] && saved.answers
@@ -384,22 +382,26 @@ function render(){
   $(".bg").style.backgroundImage=art ? `url("${art}")` : "";
   $("#scene").dataset.place=sceneKey;
   $("#sceneSign").textContent=scene.name;
-  $("#localName").textContent=speaker||"";
-  $("#local").hidden=!speaker;
-  player.hidden=!!art&&!scene.local;
-  mood();
+  $("#cast").hidden=!speaker;
+  if(speaker){
+    const localFigure=$("#localFigure");
+    const src=artPath(LOCAL_FIGURES[speaker]);
+    if(localFigure.getAttribute("src")!==src)localFigure.src=src;
+    localFigure.classList.toggle("mirror",speaker!=="Spyros Rent-a-Van");
+    $("#localName").textContent=speaker;
+  }
+  react();
   updateTop();
   panel.replaceChildren();
   panel.scrollTop=0;
   if(st.t==="narr"||st.t==="me"){
-    face(st.face||"normal");
+    if(st.t==="me")react("bump");
     panel.append(el("div","who",st.t==="me"?NAME():"Corfu"),el("div","line",fill(st.text)));
     if(st.scene==="arrivals")panel.append(el("div","en","Arrivals · Baggage · Exit"));
     panel.append(nextBtn());
     return;
   }
   if(st.t==="local"){
-    face("normal");
     const en=el("div","en",S.english?st.en:"");
     const r=el("button","reveal","Show English");
     r.onclick=()=>{en.textContent=st.en;r.remove()};
@@ -413,7 +415,6 @@ function render(){
     feedback(st,true);
     return;
   }
-  face("normal");
   if(st.t==="build"){renderBuild(st);return}
   if(st.kind==="meaning"&&st.gr)panel.append(el("div","who",speaker),greekBlock(st.gr));
   if(st.kind==="sign")panel.append(el("div","bigsign",st.sign));
@@ -430,13 +431,13 @@ function render(){
       b.classList.add(o.ok?"right":"wrong");
       if(gr)speak(gr);
       const wrong=st.opts.filter(option=>!option.ok).indexOf(o);
-      feedback(st,!!o.ok,st.badOptions?.[wrong],wrong,o);
+      feedback(st,!!o.ok,st.badOptions?.[wrong],o);
     };
     box.append(b);
   });
   panel.append(box);
 }
-function feedback(st,ok,joke,wrong=0,choice){
+function feedback(st,ok,joke,choice){
   const previous=run.answers[idx];
   if(ok){
     if(previous!=="first"&&previous!=="retried")run.answers[idx]=previous==="missed"?"retried":"first";
@@ -448,8 +449,7 @@ function feedback(st,ok,joke,wrong=0,choice){
     run.answers[idx]="missed";
   }
   save();
-  face(ok?st.faceGood||"proud":wrong===1?"confused":"cringe",ok?"bump":"shake");
-  mood(ok?1:2);
+  react(ok?"bump":"shake");
   const fb=el("div","fb "+(ok?"good":"bad"));
   fb.setAttribute("role","status");
   if(!ok){
@@ -537,7 +537,7 @@ function finish(){
   delete S.runs[runKey];
   save();
   const w=$("#endWrap"), f=el("img","face");
-  f.alt="";f.src=portraitPath("proud");
+  f.alt="";f.src=playerPath();
   w.replaceChildren(el("h1",null,"Chapter 1 complete"),f,
     el("div","line","Van parked. Shopping done. The buffet is officially self-service."),
     el("div","score",`${score} / ${qTotal} correct first try · +${earned} figs · ${S.figs} total`),

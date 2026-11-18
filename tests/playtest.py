@@ -24,10 +24,31 @@ def play(page, character, retry=False, resume=False):
         page.locator(f'.card[data-c="{character}"]').click()
         page.locator("#bGo").click()
     tested_retry = False
+    seen_locals = set()
     if retry:
         assert page.evaluate("CHAPTER.steps.every(step => step.opts?.every(option => option.en) ?? true)")
     for position, step in enumerate(page.evaluate("CHAPTER.steps")):
         panel = page.locator("#panel")
+        if page.locator("#cast").is_visible():
+            local = page.locator("#localName").inner_text()
+            if local not in seen_locals:
+                seen_locals.add(local)
+                assert page.locator("#player").get_attribute("src") == (
+                    "assets/sharon_full.webp" if character == "f" else "assets/dave_full.webp"
+                )
+                for actor in ("#player", "#localFigure"):
+                    image = page.locator(actor)
+                    page.wait_for_function(
+                        "selector => { const img = document.querySelector(selector); return img.complete && img.naturalWidth > 0 }",
+                        arg=actor,
+                    )
+                    assert image.evaluate("img => img.naturalHeight > img.naturalWidth")
+                    stage = page.locator("#scene").bounding_box()
+                    bounds = image.bounding_box()
+                    assert stage and bounds
+                    assert stage["y"] <= bounds["y"] and bounds["height"] > 0
+                    assert bounds["y"] + bounds["height"] <= stage["y"] + stage["height"]
+
         if step["t"] == "q":
             correct = next(o for o in step["opts"] if o.get("ok"))
             if retry and not tested_retry and step.get("kind") == "reply":
@@ -70,6 +91,7 @@ def play(page, character, retry=False, resume=False):
             assert panel.locator(".fb.good").is_visible()
         panel.get_by_role("button", name="Continue").click()
     assert page.get_by_role("heading", name="Chapter 1 complete").is_visible()
+    assert seen_locals == {"Spyros Rent-a-Van", "Kyria Eleni", "Kyrios Spyros", "Fat Spyros"}
 
 
 def check(browser_type, base, server, executable=None):

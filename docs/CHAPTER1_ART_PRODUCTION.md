@@ -2,17 +2,25 @@
 
 The approved [title reference](../art/reference/style_reference_title_screen.png) and [locals sheet](../art/reference/locals_approved_designs_sheet.png) govern character identity and style. Follow the [art brief](ART_BRIEF_CHAPTER1.txt) for compositions and the [asset status](ASSET_STATUS.md) for current local mood names.
 
-## Integrated and inspected
+## Full-body playtest
+
+Dialogue scenes now use six full-body sprites with room for shoes, hands and hair. Dave uses his existing approved standing design. Sharon has a hands-free standing pose. Spyros Rent-a-Van, Kyria Eleni, Kyrios Spyros and Fat Spyros use the faces and visible clothing from their approved references, extended to full length. Name tags sit below the sprites. Dialogue reactions use movement and text with the standing art.
+
+Original PNGs remain in place. New masters are under `art/raw/approved/`; run the importer to refresh the WebPs, remove nearly transparent edge noise, and add uniform padding. The title background and three playable airport panels use hands-free artwork for Sharon.
+
+## Artwork from the first playtest
 
 - Preserved the title background, logo, tagline, full-body character art, and the existing Dave and Sharon WebPs other than the repaired shocked portrait. The approved title master and reference files remain in the repository.
 - Generated and integrated the four location backgrounds from the brief. The office and apartment exterior use warm plaster, terracotta and faded green shutters, with blank signboards. The kitchen and market use a wider palette of tiled floors, olive greens and warm plaster. The in-game title supplies the Greek sign at the hire office.
-- Produced a transparent, left-facing Spyros Rent-a-Van normal portrait from the approved portrait reference. It retains his dark curls, moustache, plain navy polo, glasses at the collar and clipboard. The playtest uses it for all moods until the other two poses are available.
+- Produced a transparent, left-facing Spyros Rent-a-Van normal portrait from the approved portrait reference. It retains his dark curls, moustache, plain navy polo, glasses at the collar and clipboard. It remains available as source material for a future portrait layout.
 - Integrated three painted airport panels. Greek airport-sign labels and translations are rendered outside the artwork.
 - Redrew the shocked Sharon portrait from the approved crop with opaque figure alpha, a clear edge and no neighbouring image sliver. Preserved the original raw PNG. Full expression-set framing still needs a shared guide.
 - Added a transparent fig reward and the illustrated van app icon. The icon master exports to the 180, 192 and 512 px runtime PNG sizes.
 - Sharon’s original seven bust files are 640 × 640 with zero fully opaque pixels. Their existing WebPs restore opacity and are visibly usable, but that cleanup left crop and fringe issues. Dave’s 600 × 600 busts have alpha, though the source crop dimensions fall short of the 1024 px masters and contain defects. All twelve old local crops are fully opaque at roughly 430–446 × 245–275, with baked-in captions. Those crops remain as source references rather than game portraits.
 
-## Remaining production files
+## Optional portrait work for a future layout
+
+The files below belong to the earlier bust layout. The current full-body cast is complete.
 
 | Target | Direction and acceptance checks |
 | --- | --- |

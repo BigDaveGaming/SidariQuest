@@ -1,7 +1,7 @@
 """Import approved PNG masters already placed in art/raw. Requires Pillow."""
 import json
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "art/raw"
@@ -34,9 +34,26 @@ def convert(path, name, size=None, transparent=False, bounds=(1024, 1536)):
         available.append(name)
 
 
+def convert_full_body(path, name):
+    if not path.is_file():
+        return
+    with Image.open(path) as master:
+        image = master.convert("RGBA")
+        alpha = image.getchannel("A").point([0 if n < 8 else 255 if n > 249 else n for n in range(256)])
+        if alpha.getextrema() != (0, 255):
+            raise ValueError(f"{path}: needs transparent margins and an opaque figure")
+        image.putalpha(alpha)
+        image = ImageOps.expand(image.crop(alpha.getbbox()), border=16)
+        image.thumbnail((620, 1024), Image.Resampling.LANCZOS)
+        image.save(ASSETS / f"{name}.webp", quality=85, method=6)
+        available.append(name)
+
+
 for folder, names in (("backgrounds", BACKGROUNDS), ("intro", INTRO)):
     for name in sorted(names):
-        convert(RAW / folder / f"{name}.png", name, (1024, 1536), bounds=(840, 1260))
+        updated = RAW / "approved" / folder / f"{name}.png"
+        path = updated if updated.is_file() else RAW / folder / f"{name}.png"
+        convert(path, name, (1024, 1536), bounds=(840, 1260))
 
 # Keep the original undersized sheets and crops in their original folders.
 approved = RAW / "approved"
@@ -44,14 +61,18 @@ for character, moods in LOCALS.items():
     for mood in moods:
         name = f"{character}_{mood}"
         convert(approved / "locals" / f"{name}.png", name, (1024, 1024), True, (640, 640))
+    name = f"{character}_full"
+    convert_full_body(approved / "locals" / f"{name}.png", name)
 
 for character in ("dave", "sharon"):
     for mood in EXPRESSIONS:
         name = f"{character}_{mood}"
         convert(approved / "characters" / f"{name}.png", name, (1024, 1024), True, (640, 640))
     name = f"{character}_full"
-    convert(approved / "characters" / f"{name}.png", name, transparent=True, bounds=(520, 1000))
+    path = approved / "characters" / f"{name}.png"
+    convert_full_body(path if path.is_file() else RAW / "characters" / path.name, name)
 
+convert(approved / "title" / "title_background.png", "title_bg", (1024, 1536))
 convert(RAW / "extras/fig.png", "fig", transparent=True, bounds=(96, 96))
 icon = RAW / "extras/icon.png"
 if icon.is_file():

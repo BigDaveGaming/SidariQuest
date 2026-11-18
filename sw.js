@@ -1,16 +1,12 @@
 importScripts("assets/chapter1-art.js");
 
 const PREFIX = "sidari-quest-";
-const CACHE = PREFIX + "playtest-v2";
+const CACHE = PREFIX + "playtest-v3";
 const SHELL = [
   "./", "index.html", "manifest.json", "chapter1.js", "progress.js",
   "icon-180.png", "icon-192.png", "icon-512.png", "assets/chapter1-art.js"
 ];
-const players = ["dave", "sharon"].flatMap(character =>
-  ["full", "normal", "proud", "confused", "cringe", "fuming", "shocked", "talking"]
-    .map(mood => character + "_" + mood)
-);
-const art = [...new Set(["title_bg", "tagline", "logo", ...players, ...GAME_ART])]
+const art = [...new Set(["title_bg", "tagline", "logo", ...GAME_ART])]
   .map(name => "assets/" + name + ".webp");
 
 self.addEventListener("install", event => {
