@@ -455,7 +455,7 @@ function feedback(st,ok,joke,wrong=0,choice){
   if(!ok){
     const correct=st.opts?.find(option=>option.ok);
     const explanation=choice?.gr
-      ? `You said “${fill(choice.en)}”`
+      ? `You just ${fill(choice.gr).endsWith(";")?"asked":"said"} “${fill(choice.en)}”`
       : st.t==="build"
         ? `Aim for ${st.answer} · ${fill(st.learn[1])}`
         : `It means “${fill(correct.en)}”`;

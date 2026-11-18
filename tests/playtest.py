@@ -37,7 +37,7 @@ def play(page, character, retry=False, resume=False):
                     panel.locator(".opt").filter(has_text=label).click()
                     responses.append(panel.locator(".fb.bad b").inner_text())
                     meaning = panel.locator(".fb.bad .answer-meaning").inner_text()
-                    assert meaning == f'You said “{option["en"]}”'
+                    assert meaning == f'You just said “{option["en"]}”'
                     assert not panel.get_by_role("button", name="Continue").count()
                     panel.get_by_role("button", name="Try again").click()
                 assert len(set(responses)) == 2
