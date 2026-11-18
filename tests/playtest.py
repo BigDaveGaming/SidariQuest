@@ -29,6 +29,8 @@ def play(page, character, retry=False, resume=False):
         assert page.evaluate("CHAPTER.steps.every(step => step.opts?.every(option => option.en) ?? true)")
     for position, step in enumerate(page.evaluate("CHAPTER.steps")):
         panel = page.locator("#panel")
+        if step.get("wide"):
+            assert page.locator("#cast").is_hidden()
         if page.locator("#cast").is_visible():
             local = page.locator("#localName").inner_text()
             if local not in seen_locals:

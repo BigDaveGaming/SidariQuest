@@ -382,8 +382,8 @@ function render(){
   $(".bg").style.backgroundImage=art ? `url("${art}")` : "";
   $("#scene").dataset.place=sceneKey;
   $("#sceneSign").textContent=scene.name;
-  $("#cast").hidden=!speaker;
-  if(speaker){
+  $("#cast").hidden=!speaker||st.wide===true;
+  if(!$("#cast").hidden){
     const localFigure=$("#localFigure");
     const src=artPath(LOCAL_FIGURES[speaker]);
     if(localFigure.getAttribute("src")!==src)localFigure.src=src;
