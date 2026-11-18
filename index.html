@@ -288,7 +288,7 @@ const LESSON1={
       why:"ενοικιάσεις = rentals, αυτοκινήτων = of cars. You'll see this sign all over Corfu.",
       bad:{m:"Dave tries to park in it.",f:"Sharon asks it for directions."},
       learn:["Ενοικιάσεις αυτοκινήτων","Car hire"]},
-    {t:"me",text:{m:"ALRIGHT MATE! I… WANT… A… VAN!",f:"HIYA DARLIN'! WE… WANT… A… VAN!"},face:"talking"},
+    {t:"me",text:{m:"ALRIGHT MATE! I… WANT… A… VAN!",f:"HIYA, LUV! WE… WANT… A… VAN!"},face:"talking"},
     {t:"local",gr:"Καλημέρα.",en:"Good morning.",mood:"😒"},
     {t:"q",kind:"reply",prompt:"Greet him back properly:",
       opts:[{gr:"Καλημέρα!",en:"Good morning!",ok:1},{gr:"Καληνύχτα!",en:"Good night!"},{gr:"Γεια μας!",en:"Cheers!"}],
@@ -340,21 +340,28 @@ const LESSON1={
       why:"Προσέξτε = be careful, watch out. On signs you'll see ΠΡΟΣΟΧΗ (caution).",
       bad:"Fair guess, but προσέξτε means be careful.",
       learn:["Προσέξτε!","Be careful!"]},
-    {t:"me",text:{m:"Don't worry, Spyros mate. I've been driving vans for thirty years.",f:"Don't worry darlin'. Dave's been driving vans for thirty years."},face:"talking",mood:"😒"}
+    {t:"me",text:{m:"Don't worry, Spyros mate. I've been driving vans for thirty years.",f:"Don't worry, luv. Dave's been driving vans for thirty years."},face:"talking",mood:"😒"}
   ]
 };
 
 /* ---------- lesson engine ---------- */
-let L,idx,score,qTotal,earned,learned;
+let L,idx,score,qTotal,earned,learned,attempted,missed,awarded;
+const LESSON_REWARD_KEY="chapter1-lesson1";
 const player=$("#player"),panel=$("#panel"),moodEl=$("#mood");
 function face(f,anim){player.src=`assets/${S.c==="f"?"sharon":"dave"}_${f}.webp`;if(anim){player.classList.remove("bump","shake");void player.offsetWidth;player.classList.add(anim)}}
 function mood(m){if(m)moodEl.textContent=m}
 function startLesson(){
-  L=LESSON1;idx=0;score=0;earned=0;learned=[];
+  L=LESSON1;idx=0;score=0;earned=0;learned=[];attempted=new Set();missed=new Set();awarded=new Set();
   qTotal=L.steps.filter(s=>s.t==="q"||s.t==="build").length;
   face("normal");mood("🙂");updateTop();show("lesson");$("#lesson").classList.add("on");render();
 }
 function updateTop(){$("#prog").style.width=(idx/L.steps.length*100)+"%";$("#figs").textContent="🟣 "+(S.figs)}
+function awardFig(){
+  // One fig per unique question on the first completed playthrough only.
+  if((S.completedLessons||[]).includes(LESSON_REWARD_KEY)||awarded.has(idx)||missed.has(idx))return;
+  awarded.add(idx);earned++;S.figs++;save();
+}
+function rememberPhrase(st){if(st.learn&&!learned.includes(st.learn))learned.push(st.learn)}
 function nextBtn(label="Continue"){const b=el("button","btn play next",label);b.onclick=()=>{idx++;updateTop();idx>=L.steps.length?finish():render()};return b}
 function render(){
   const st=L.steps[idx];panel.innerHTML="";panel.scrollTop=0;
@@ -393,20 +400,24 @@ function answer(st,o,b,box){
   if(o.gr)speak(fill(o.gr));
   const fb=el("div","fb "+(ok?"good":"bad"));
   if(ok){
-    b.classList.add("right");score++;earned++;S.figs++;save();
+    b.classList.add("right");
+    if(!attempted.has(idx))score++;
+    awardFig();
     face(st.faceGood||"proud","bump");mood(st.moodGood||"😃");
-    fb.innerHTML=`<b>${st.good?fill(st.good):"Σωστά! — Correct!"}</b>${fill(st.why)}`;
+    fb.append(el("b",null,fill(st.good||"Σωστά! — Correct!")),document.createTextNode(fill(st.why)));
+    rememberPhrase(st);
+    panel.append(fb,nextBtn());
   }else{
+    attempted.add(idx);missed.add(idx);
     b.classList.add("wrong");
-    const corr=st.opts.find(x=>x.ok);
-    [...box.children].forEach(x=>{const t=corr.gr?fill(corr.gr):fill(corr.en);if(x.textContent.startsWith(t))x.classList.add("right")});
     face("cringe","shake");mood("😒");
-    const ans=corr.gr?`${fill(corr.gr)} <i>(${fill(corr.en)})</i>`:fill(corr.en);
-    fb.innerHTML=`<b>${fill(st.bad||"Not quite.")}</b>Answer: ${ans}<br>${fill(st.why)}`;
+    fb.append(el("b",null,fill(st.bad||"Not quite.")),document.createTextNode(" "+fill(st.why)));
+    panel.append(fb);
+    const retry=el("button","btn play next","Try again");
+    retry.onclick=()=>render();
+    panel.append(retry);
   }
-  if(st.learn)learned.push(st.learn);
   updateTop();
-  panel.append(fb,nextBtn());
   setTimeout(()=>fb.scrollIntoView({behavior:"smooth",block:"nearest"}),50);
 }
 function renderBuild(st){
@@ -432,19 +443,22 @@ function renderBuild(st){
     check.remove();[...tiles.children,...ans.children].forEach(x=>x.disabled=true);
     const ok=said===st.answer;speak(st.answer);
     const fb=el("div","fb "+(ok?"good":"bad"));
-    if(ok){score++;earned++;S.figs++;save();face("proud","bump");mood("😃");fb.innerHTML=`<b>Σωστά! — Correct!</b>${st.why}`}
-    else{face("cringe","shake");mood("😒");fb.innerHTML=`<b>Not quite.</b>Answer: <b style="display:inline;font-size:inherit">${st.answer}</b><br>${st.why}`}
-    learned.push(st.learn);updateTop();panel.append(fb,nextBtn());
+    if(ok){if(!attempted.has(idx))score++;awardFig();face("proud","bump");mood("😃");fb.innerHTML=`<b>Σωστά! — Correct!</b>${st.why}`}
+    else{attempted.add(idx);missed.add(idx);face("cringe","shake");mood("😒");fb.innerHTML=`<b>Not quite.</b> ${st.why} Try building the phrase again.`}
+    if(ok)rememberPhrase(st);updateTop();panel.append(fb);if(ok){panel.append(nextBtn())}else{const retry=el("button","btn play next","Try again");retry.onclick=()=>render();panel.append(retry)}
     setTimeout(()=>fb.scrollIntoView({behavior:"smooth",block:"nearest"}),50);
   };
   panel.append(ans,tiles,check);
 }
 function finish(){
   const good=score>=qTotal-2;
+  S.completedLessons=Array.isArray(S.completedLessons)?S.completedLessons:[];
+  if(!S.completedLessons.includes(LESSON_REWARD_KEY))S.completedLessons.push(LESSON_REWARD_KEY);
+  save();
   const w=$("#endWrap");w.innerHTML="";
   const f=el("img","face");f.src=`assets/${S.c==="f"?"sharon":"dave"}_${good?"proud":"cringe"}.webp`;
   w.append(el("h1",null,"Van acquired! 🚐"),f,
-    el("div","score",`${score} / ${qTotal} right · +${earned} figs 🟣`));
+    el("div","score",`${score} / ${qTotal} correct first try · +${earned} figs 🟣`));
   const lb=el("div","learned");lb.append(el("h3",null,"Phrases you learned"));
   learned.forEach(([g,e])=>{
     g=fill(g);const r=el("div","lr");const t=el("div","t");
