@@ -68,7 +68,7 @@ def play(page, character, retry=False, resume=False):
     assert page.get_by_role("heading", name="Chapter 1 complete").is_visible()
 
 
-def check(browser_type, base, executable=None):
+def check(browser_type, base, server, executable=None):
     browser = browser_type.launch(executable_path=executable)
     mobile = {"viewport": {"width": 390, "height": 844}, "has_touch": True}
     ctx = browser.new_context(**mobile)
@@ -107,7 +107,8 @@ def check(browser_type, base, executable=None):
     page.locator("#bChange").click()
     page.locator('.card[data-c="f"]').click()
     page.reload()
-    ctx.set_offline(True)
+    server.shutdown()
+    server.server_close()
     page.goto(base + "?offline=1")
     play(page, "f", retry=True)
     assert page.evaluate("S.figs") == fig_count
@@ -135,5 +136,5 @@ if __name__ == "__main__":
     server = ThreadingHTTPServer(("127.0.0.1", 0), partial(Handler, directory=ROOT))
     Thread(target=server.serve_forever, daemon=True).start()
     with sync_playwright() as playwright:
-        check(getattr(playwright, args.engine), f"http://127.0.0.1:{server.server_port}/SidariQuest/", args.executable)
+        check(getattr(playwright, args.engine), f"http://127.0.0.1:{server.server_port}/SidariQuest/", server, args.executable)
     print(f"{args.engine}: both characters, retry, resume, replay, phrasebook, manifest, offline, and viewport smoke checks passed")
