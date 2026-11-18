@@ -23,6 +23,8 @@ def play(page, character, retry=False, resume=False):
     if page.locator("#select").is_visible():
         page.locator(f'.card[data-c="{character}"]').click()
         page.locator("#bGo").click()
+    player = page.locator("#player")
+    sprite = "assets/sharon_full" if character == "f" else "assets/dave_full"
     tested_retry = False
     seen_locals = set()
     if retry:
@@ -52,18 +54,23 @@ def play(page, character, retry=False, resume=False):
                     assert bounds["y"] + bounds["height"] > stage["y"] + stage["height"]
                     assert bounds["y"] + 45 < stage["y"] + stage["height"]
 
+        if step["t"] == "me":
+            assert player.get_attribute("src") == sprite + "_talking.webp"
         if step["t"] == "q":
             correct = next(o for o in step["opts"] if o.get("ok"))
             if retry and not tested_retry and step.get("kind") == "reply":
                 responses = []
-                for option in [o for o in step["opts"] if not o.get("ok")]:
+                for wrong, option in enumerate(o for o in step["opts"] if not o.get("ok")):
                     label = option.get("gr", option.get("en"))
                     panel.locator(".opt").filter(has_text=label).click()
+                    reaction = "confused" if wrong == 1 else "cringe"
+                    assert player.get_attribute("src") == f"{sprite}_{reaction}.webp"
                     responses.append(panel.locator(".fb.bad b").inner_text())
                     meaning = panel.locator(".fb.bad .answer-meaning").inner_text()
                     assert meaning == f'You just said “{option["en"]}”'
                     assert not panel.get_by_role("button", name="Continue").count()
                     panel.get_by_role("button", name="Try again").click()
+                    assert player.get_attribute("src") == sprite + ".webp"
                 assert len(set(responses)) == 2
                 if resume:
                     page.reload()
@@ -77,6 +84,8 @@ def play(page, character, retry=False, resume=False):
             label = label.replace("{PG}", "Σάρον" if character == "f" else "Ντέιβ")
             panel.locator(".opt").filter(has_text=label).click()
             assert panel.locator(".fb.good").is_visible()
+            reaction = step.get("reaction", "pleased")
+            assert player.get_attribute("src") == f"{sprite}_{reaction}.webp"
             if resume and position == 4:
                 page.reload()
                 page.get_by_role("button", name="Continue Adventure").click()

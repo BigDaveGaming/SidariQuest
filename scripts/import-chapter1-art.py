@@ -16,6 +16,7 @@ LOCALS = {
     "kyrios_spyros": ("normal", "stern", "explaining"),
     "fat_spyros": ("normal", "laughing", "fed_up"),
 }
+REACTIONS = ("pleased", "cringe", "confused", "shocked", "talking")
 EXPRESSIONS = ("normal", "proud", "confused", "cringe", "fuming", "shocked", "talking")
 available = []
 
@@ -34,7 +35,7 @@ def convert(path, name, size=None, transparent=False, bounds=(1024, 1536)):
         available.append(name)
 
 
-def convert_full_body(path, name):
+def convert_full_body(path, name, frame=None):
     if not path.is_file():
         return
     with Image.open(path) as master:
@@ -44,9 +45,13 @@ def convert_full_body(path, name):
             raise ValueError(f"{path}: needs transparent margins and an opaque figure")
         image.putalpha(alpha)
         image = ImageOps.expand(image.crop(alpha.getbbox()), border=16)
-        image.thumbnail((620, 1024), Image.Resampling.LANCZOS)
+        if frame:
+            image = image.resize(frame, Image.Resampling.LANCZOS)
+        else:
+            image.thumbnail((620, 1024), Image.Resampling.LANCZOS)
         image.save(ASSETS / f"{name}.webp", quality=85, method=6)
         available.append(name)
+        return image.size
 
 
 for folder, names in (("backgrounds", BACKGROUNDS), ("intro", INTRO)):
@@ -70,7 +75,10 @@ for character in ("dave", "sharon"):
         convert(approved / "characters" / f"{name}.png", name, (1024, 1024), True, (640, 640))
     name = f"{character}_full"
     path = approved / "characters" / f"{name}.png"
-    convert_full_body(path if path.is_file() else RAW / "characters" / path.name, name)
+    frame = convert_full_body(path if path.is_file() else RAW / "characters" / path.name, name)
+    for reaction in REACTIONS:
+        name = f"{character}_full_{reaction}"
+        convert_full_body(approved / "characters" / f"{name}.png", name, frame)
 
 convert(approved / "title" / "title_background.png", "title_bg", (1024, 1536))
 convert(RAW / "extras/fig.png", "fig", transparent=True, bounds=(96, 96))

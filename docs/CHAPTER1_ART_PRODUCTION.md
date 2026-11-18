@@ -4,7 +4,7 @@ The approved [title reference](../art/reference/style_reference_title_screen.png
 
 ## Full-body playtest
 
-Dialogue scenes use six intact full-body assets as the source for closer framing. The dialogue panel hides the lower bodies, and the mini-market counter sits in front of the shopkeeper. Dave uses his existing approved standing design. Sharon has a hands-free standing pose. Spyros Rent-a-Van, Kyria Eleni, Kyrios Spyros and Fat Spyros use the faces and visible clothing from their approved references, extended to full length. Wide location shots establish the setting before the characters move into the foreground for dialogue. Dialogue reactions use movement and text with the standing art.
+Dialogue scenes use six intact full-body assets as the source for closer framing. The dialogue panel hides the lower bodies, and the mini-market counter sits in front of the shopkeeper. Dave uses his existing approved standing design. Sharon has a hands-free standing pose. Spyros Rent-a-Van, Kyria Eleni, Kyrios Spyros and Fat Spyros use the faces and visible clothing from their approved references, extended to full length. Wide location shots establish the setting before the characters move into the foreground for dialogue. Dave and Sharon swap to matching full-figure reactions for correct answers, mistakes and the van price reveal. Expression sprites use the same runtime dimensions as each neutral figure so the dialogue framing stays fixed.
 
 Original PNGs remain in place. New masters are under `art/raw/approved/`; run the importer to refresh the WebPs, remove nearly transparent edge noise, and add uniform padding. Sharon uses her phone to film the view in the plane. The title, baggage reclaim and arrivals panels show her with empty hands.
 

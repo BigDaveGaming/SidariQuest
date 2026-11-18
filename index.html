@@ -368,14 +368,27 @@ let run, runKey, idx, speaker;
 const steps=CHAPTER.steps;
 const qTotal=steps.filter(s=>s.t==="q"||s.t==="build").length;
 const player=$("#player"), panel=$("#panel");
-const playerPath=()=>`assets/${S.c==="f"?"sharon":"dave"}_full.webp`;
-function react(animation){
+const PLAYER_REACTIONS=["pleased","cringe","confused","shocked","talking"];
+const playerName=()=>S.c==="f"?"sharon":"dave";
+const playerPath=(expression="neutral")=>{
+  const base=playerName()+"_full";
+  return artPath(base+"_"+expression)||artPath(base);
+};
+function react(animation,expression){
+  if(expression){
+    const next=playerPath(expression);
+    if(player.getAttribute("src")!==next)player.src=next;
+  }
   player.classList.remove("bump","shake");
   if(animation){void player.offsetWidth;player.classList.add(animation)}
 }
 function artPath(name){return name && GAME_ART.includes(name) ? `assets/${name}.webp` : ""}
 function startLesson(){
   player.src=playerPath();
+  for(const expression of PLAYER_REACTIONS){
+    const image=new Image();
+    image.src=playerPath(expression);
+  }
   runKey=`${CHAPTER.id}-${S.c}`;
   const saved=S.runs[runKey];
   run=saved && Number.isInteger(saved.idx) && steps[saved.idx] && saved.answers
@@ -424,12 +437,12 @@ function render(){
     $("#localActor").dataset.character=LOCAL_FIGURES[speaker].replace(/_full$/,"");
     localFigure.alt=speaker;
   }
-  react();
+  react(null,st.kind==="meaning"?"confused":"neutral");
   updateTop();
   panel.replaceChildren();
   panel.scrollTop=0;
   if(st.t==="narr"||st.t==="me"){
-    if(st.t==="me")react("bump");
+    if(st.t==="me")react("bump","talking");
     panel.append(el("div","who",st.t==="me"?NAME():"Corfu"),el("div","line",fill(st.text)));
     if(st.scene==="arrivals")panel.append(el("div","en","Arrivals · Baggage · Exit"));
     panel.append(nextBtn());
@@ -465,13 +478,13 @@ function render(){
       b.classList.add(o.ok?"right":"wrong");
       if(gr)speak(gr);
       const wrong=st.opts.filter(option=>!option.ok).indexOf(o);
-      feedback(st,!!o.ok,st.badOptions?.[wrong],o);
+      feedback(st,!!o.ok,st.badOptions?.[wrong],o,wrong===1?"confused":"cringe");
     };
     box.append(b);
   });
   panel.append(box);
 }
-function feedback(st,ok,joke,choice){
+function feedback(st,ok,joke,choice,wrongReaction="cringe"){
   const previous=run.answers[idx];
   if(ok){
     if(previous!=="first"&&previous!=="retried")run.answers[idx]=previous==="missed"?"retried":"first";
@@ -483,7 +496,7 @@ function feedback(st,ok,joke,choice){
     run.answers[idx]="missed";
   }
   save();
-  react(ok?"bump":"shake");
+  react(ok?"bump":"shake",ok?(st.reaction||"pleased"):wrongReaction);
   const fb=el("div","fb "+(ok?"good":"bad"));
   fb.setAttribute("role","status");
   if(!ok){
@@ -571,7 +584,7 @@ function finish(){
   delete S.runs[runKey];
   save();
   const w=$("#endWrap"), f=el("img","face");
-  f.alt="";f.src=playerPath();
+  f.alt="";f.src=playerPath("pleased");
   w.replaceChildren(el("h1",null,"Chapter 1 complete"),f,
     el("div","line","Van parked. Shopping done. The buffet is officially self-service."),
     el("div","score",`${score} / ${qTotal} correct first try · +${earned} figs · ${S.figs} total`),

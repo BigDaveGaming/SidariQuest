@@ -45,7 +45,7 @@ const CHAPTER={
     {t:"q",legacyReward:true,kind:"meaning",gr:"Εξακόσια ευρώ τον μήνα.",prompt:"How much is it?",
       opts:[{en:"€600 a month",ok:1},{en:"€60 a month"},{en:"€600 a week"}],
       why:"εξακόσια = six hundred, τον μήνα = per month.",
-      good:"Correct… and {P} is not happy about it.",
+      good:"Correct… and {P} is not happy about it.",reaction:"shocked",
       badOptions:[{m:"Dave starts counting out three twenties. Spyros slides one extra zero across the desk.",f:"Sharon almost tells Dave he’s found a bargain. She stops just in time."},{m:"Dave starts calculating whether it’s cheaper to buy the van. Spyros taps the monthly column.",f:"Sharon starts dividing the bill by four. Spyros quietly moves her calculator off the weekly column."}],
       learn:["Τον μήνα","Per month"]},
     {t:"local",gr:"Το δίπλωμα και το διαβατήριο, παρακαλώ.",en:"Your driving licence and passport, please."},
