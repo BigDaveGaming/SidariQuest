@@ -1,0 +1,271 @@
+SIDARI QUEST — CHAPTER 1 ART BRIEF
+For: ChatGPT image generation
+From: Big Dave Gaming
+
+==================================================
+READ THIS FIRST
+==================================================
+
+You are making the art for Chapter 1 of "Big Dave & Gobby Sharon's Sidari
+Quest", a phone game that teaches practical Greek.
+
+STYLE REFERENCE: reference/style_reference_title_screen.png
+Every image must match that picture: the same bright, painted cartoon style,
+chunky outlines, saturated sunny colours, exaggerated comedy faces, and
+the SAME Dave and Sharon (same faces, bodies, hair, tattoos, outfits).
+
+Please make the images ONE AT A TIME, in the order listed, and use the
+exact file names given so they slot straight into the game.
+
+*** DELIVERY: ALL IMAGES MUST COME BACK AS ONE ZIP FILE ***
+When every image is done, put them all into a single zip file called
+SidariQuest_Chapter1_Art.zip, organised into these folders:
+
+  SidariQuest_Chapter1_Art/
+    title/        (A1–A3)
+    characters/   (B1–B2, C1–C7, D1–D7)
+    locals/       (E1–E12)
+    backgrounds/  (F1–F4)
+    intro/        (G1–G3)
+    extras/       (H1–H2)
+
+- Use the EXACT file names from this brief (lowercase, underscores, .png).
+- PNG only. Keep transparency on the cut-outs.
+- Include a file called CHECKLIST.txt in the zip listing every file and
+  marking any that are missing, so nothing gets lost.
+- If you can't fit all 40 in one go, make the zip in batches
+  (e.g. SidariQuest_Chapter1_Art_part1.zip, _part2.zip) using the same
+  folder structure, and say which images are in each part.
+
+GENERAL RULES
+1. No real brand names or logos anywhere (no real shops, bars, car
+   companies, sportswear or designer logos).
+2. LEAVE ALL SHOP SIGNS AND STREET SIGNS BLANK unless told otherwise.
+   The game adds the Greek text itself. Plain blank boards/panels only.
+3. Do NOT add any buttons, menus, speech bubbles, captions or UI.
+4. Cut-outs (characters) = transparent background PNG, nothing else in
+   the image, whole figure/bust visible, not cropped at the edges.
+5. Backgrounds = NO characters in them. Portrait 1024 x 1536.
+   Keep the bottom third fairly simple (floor, counter, pavement) because
+   a dialogue box sits there.
+6. Dave and Sharon face slightly towards the RIGHT of the image.
+   All locals face slightly towards the LEFT (so they face each other
+   on screen).
+7. Face images (busts) must all use identical framing for each character:
+   head and shoulders, same size, same position, so the game can swap
+   them without the character jumping around.
+
+==================================================
+THE CHARACTERS
+==================================================
+
+BIG DAVE (playable)
+Big stocky British bloke, 50s. Bald, slightly sunburnt head, grey stubble
+beard. Sunglasses pushed up on his head. Yellow-and-blue palm-tree vest,
+thick gold chain, gold watch, tribal tattoos on both arms and shoulders.
+Board shorts, white socks, sliders. Smug, confident. Exactly as in the
+style reference.
+
+GOBBY SHARON (playable)
+British woman, 40s/50s. Bright copper-ginger hair in a messy high bun with
+loose strands, sunglasses on her head. Heavy dark drawn-on eyebrows, huge
+false lashes, big glossy lips. Large gold hoop earrings, gold bangle,
+long pink nails. Leopard-print bikini top with a sarong/shorts, leopard
+print phone case, phone always in hand. Loud, gesturing. Exactly as in the
+style reference.
+
+SPYROS RENT-A-VAN (local, the van hire man)
+Greek man, 40s, slim, neat moustache, aviator sunglasses on his collar.
+Plain navy polo shirt (blank, no logo), car keys on a lanyard, clipboard.
+A man who has seen what tourists do to vans. Nervous energy.
+
+KYRIA ELENI (local, landlady)
+Greek grandmother (yiayia), 70s, small and round, grey hair in a bun,
+black dress with a floral apron, gold cross necklace. Kind but sees
+everything. Often holding a bowl of figs.
+
+KYRIOS SPYROS (local, landlord, Eleni's husband)
+Greek grandfather, 70s, tall and thin, white bushy moustache, flat cap,
+short-sleeved checked shirt, trousers with braces, worry beads
+(komboloi) in one hand. Inspects everything. Holds the deposit.
+
+FAT SPYROS (local, runs the mini market)
+Greek man, 50s, very round, cheerful, balding with a comb-over, white
+vest under an open short-sleeved shirt, pencil behind his ear. Lives
+behind the till.
+
+==================================================
+ASSET LIST — CHAPTER 1 (40 images)
+==================================================
+
+--------------------------------------------------
+A. TITLE SCREEN (3 images)
+--------------------------------------------------
+
+A1. title_background.png  (portrait 1024 x 1536)
+Recreate the style reference scene EXACTLY (Dave and Sharon leaning out
+of the white van on the Sidari strip, bougainvillea, tourists, souvenir
+racks) BUT:
+- Remove the title logo, the "Big Dave Gaming presents" text, the menu
+  buttons, and the "Learn Greek. Cause Chaos." scroll.
+- Keep the top third as open blue sky (the logo goes there).
+- Keep the lower right area as plain pavement/road (buttons go there).
+- Rename the bar signs:
+    "BED Cocktail Bar" neon  ->  "C.O.U.C.H."  with the smaller line
+       "Cocktails · Oldies · Unlimited Chips · Hangovers"
+    "Madison Bar & Diner"    ->  "Jefferson Bar & Diner"
+- The blue "Sidari" street sign: leave it BLANK (plain blue sign).
+- Keep the Union Jack magnet on the van door.
+
+A2. logo.png  (transparent background, wide)
+The title logo from the style reference on its own: the parchment banner
+"BIG DAVE & GOBBY SHARON'S" above the big white-and-blue
+"SIDARI QUEST" lettering with the Greek key (meander) border and the
+small Greek flag underneath. Nothing else.
+
+A3. tagline.png  (transparent background)
+The parchment scroll with "Learn Greek. Cause Chaos." and the olive
+sprig, on its own.
+
+--------------------------------------------------
+B. CHARACTER SELECT (2 images)
+--------------------------------------------------
+
+B1. dave_full.png  (transparent, full body, standing)
+Big Dave head to toe, arms folded, smug grin, holiday outfit as described.
+Union Jack magnet in one hand (he brought them from home).
+
+B2. sharon_full.png  (transparent, full body, standing)
+Gobby Sharon head to toe, one hand on hip, phone held up in the other,
+mid-sentence, holiday outfit as described.
+
+--------------------------------------------------
+C. DAVE'S FACES (7 images, transparent, head and shoulders,
+   identical framing, facing slightly right)
+--------------------------------------------------
+
+C1. dave_normal.png     — relaxed, mildly smug
+C2. dave_proud.png      — chest out, big grin, thumbs up
+C3. dave_confused.png   — one eyebrow up, mouth open, scratching his head
+C4. dave_cringe.png     — wincing, teeth clenched, embarrassed
+C5. dave_fuming.png     — red face, veins on head, steam-level angry
+C6. dave_shocked.png    — eyes popping, jaw dropped (just seen the price)
+C7. dave_talking.png    — mid-sentence, one hand gesturing, explaining
+                          loudly and slowly in English
+
+--------------------------------------------------
+D. SHARON'S FACES (7 images, transparent, head and shoulders,
+   identical framing, facing slightly right)
+--------------------------------------------------
+
+D1. sharon_normal.png   — unimpressed pout (her resting face)
+D2. sharon_proud.png    — beaming, flicking her hair, smug
+D3. sharon_confused.png — squinting, lips pursed, head tilted
+D4. sharon_cringe.png   — hand over face, peeking through fingers
+D5. sharon_fuming.png   — outraged, typing furiously on her phone
+                          (a one-star review in progress)
+D6. sharon_shocked.png  — gasping, hand on chest, mouth wide open
+D7. sharon_talking.png  — mid-rant, hand waving, phone in other hand
+
+--------------------------------------------------
+E. LOCALS' FACES (12 images, transparent, head and shoulders,
+   identical framing per character, facing slightly LEFT)
+--------------------------------------------------
+
+E1.  spyros_van_normal.png       — polite, slightly wary smile
+E2.  spyros_van_pleased.png      — relieved, warm smile
+E3.  spyros_van_unimpressed.png  — staring at a new scratch, sweating
+
+E4.  eleni_normal.png            — calm, watchful
+E5.  eleni_pleased.png           — big smile, offering a bowl of figs
+E6.  eleni_unimpressed.png       — arms folded, eyebrow raised
+
+E7.  kyrios_spyros_normal.png      — neutral, clicking worry beads
+E8.  kyrios_spyros_pleased.png     — rare smile, tipping his cap
+E9.  kyrios_spyros_unimpressed.png — frowning over his moustache,
+                                     inspecting something
+
+E10. fat_spyros_normal.png       — friendly, leaning on the counter
+E11. fat_spyros_pleased.png      — laughing, belly shaking
+E12. fat_spyros_unimpressed.png  — deadpan, pencil tapping
+
+--------------------------------------------------
+F. BACKGROUNDS (4 images, portrait 1024 x 1536, NO characters,
+   signs BLANK, bottom third kept simple)
+--------------------------------------------------
+
+F1. bg_van_hire.png
+Small Greek car/van hire office by a sunny roadside near the airport:
+a little whitewashed office with a blank sign board above the door, a
+row of small hire cars and ONE battered white panel van, a counter
+visible through the open door, a potted palm, hot sun.
+
+F2. bg_apartment_outside.png
+Two-storey whitewashed Greek holiday apartment block with blue shutters
+and a small balcony, bougainvillea over the gate, terracotta pots,
+a fig tree in the garden next door (the landlords' house), olive
+trees behind, a plain blank sign board by the gate.
+
+F3. bg_apartment_kitchen.png
+Small, basic self-catering kitchenette: two-ring hob, tiny fridge, one
+saucepan, a kettle, mismatched plates, a small table with two chairs,
+patio doors open to a balcony with a sea glimpse. Very clearly NOT
+a hotel buffet. Empty fridge door slightly open.
+
+F4. bg_minimarket.png
+Inside a small Greek tourist mini market: packed shelves (bread, crisps,
+olive oil, water bottles, sun cream, inflatables hanging from the
+ceiling), a fruit and veg stand with tomatoes, a till counter with a
+blank price board behind it, a fridge of drinks. No readable brand names.
+
+--------------------------------------------------
+G. INTRO COMIC PANELS (3 images, portrait 1024 x 1536,
+   full scenes WITH Dave and Sharon, no speech bubbles, signs BLANK)
+--------------------------------------------------
+
+G1. intro_1_landing.png
+Inside a holiday plane landing in Corfu: Sharon at the window seat
+filming the runway on her phone, beaming; Dave asleep with his mouth
+open, sunglasses wonky, still wearing his neck pillow. Blue sea and
+green island visible through the window.
+
+G2. intro_2_baggage.png
+Corfu airport baggage reclaim: the carousel is empty except for ONE
+enormous, battered suitcase covered in stickers coming out last. Sharon
+tapping her foot, Dave lunging to grab it. Other tourists already gone.
+
+G3. intro_3_arrivals.png
+Dave and Sharon walking out of the arrivals hall into blazing sunshine,
+dragging the giant case, Dave squinting, Sharon taking a selfie.
+Overhead there are THREE large BLANK direction signs (the game will
+add the Greek words for Arrivals, Baggage and Exit).
+
+--------------------------------------------------
+H. EXTRAS (2 images)
+--------------------------------------------------
+
+H1. icon.png  (square 1024 x 1024, NOT transparent)
+App icon: a cartoon white panel van with a Union Jack magnet on the
+door, on a Greek-blue background with a white Greek key border and a
+golden sun. Bold and readable at small size. No text.
+
+H2. fig.png  (transparent, square)
+A single ripe purple fig, cartoon style, glossy, slightly cut open to
+show the pink inside. Used as the game's reward/points icon.
+
+==================================================
+CHECKLIST (40 files) — deliver as SidariQuest_Chapter1_Art.zip
+==================================================
+
+title_background.png, logo.png, tagline.png
+dave_full.png, sharon_full.png
+dave_normal / proud / confused / cringe / fuming / shocked / talking .png
+sharon_normal / proud / confused / cringe / fuming / shocked / talking .png
+spyros_van_normal / pleased / unimpressed .png
+eleni_normal / pleased / unimpressed .png
+kyrios_spyros_normal / pleased / unimpressed .png
+fat_spyros_normal / pleased / unimpressed .png
+bg_van_hire.png, bg_apartment_outside.png, bg_apartment_kitchen.png,
+bg_minimarket.png
+intro_1_landing.png, intro_2_baggage.png, intro_3_arrivals.png
+icon.png, fig.png

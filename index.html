@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Sidari Quest</title>
+<meta name="theme-color" content="#027dfb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sidari Quest">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--blue:#1F5FA8;--deep:#123e75;--sky:#027dfb;--sand:#E8B04A;--sun:#F07A3A;--olive:#7A8B3C;--pink:#D9387A;--paper:#f6ead0;--ink:#1b2333;--good:#2e9e4f;--bad:#d64545}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0b2447;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);overscroll-behavior:none}
+button{font-family:inherit;cursor:pointer}
+.screen{position:fixed;inset:0;margin:0 auto;max-width:520px;display:none;overflow:hidden}
+.screen.on{display:block}
+
+/* ---------- TITLE ---------- */
+#title{background:linear-gradient(#0270f0,#2893fc 60%)}
+#title .frame{position:absolute;left:0;right:0;bottom:0;aspect-ratio:2/3;background:url(assets/title_bg.webp) center bottom/cover no-repeat}
+#title .logo{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 8px);width:min(72%,380px);filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));animation:drop .7s cubic-bezier(.2,1.4,.4,1) both}
+#title .tagline{position:absolute;left:4%;bottom:3%;width:44%;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));transform:rotate(-4deg);animation:pop .5s .5s both}
+.sign{position:absolute;left:84.1%;top:36.8%;width:14.6%;height:6.2%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:800;line-height:1.05;font-size:clamp(9px,2.6vw,13px);text-shadow:0 1px 1px rgba(0,0,0,.4)}
+.sign small{font-size:.75em;font-weight:700;opacity:.9}
+.menu{position:absolute;right:4%;bottom:5%;width:46%;display:flex;flex-direction:column;gap:10px}
+.btn{border:3px solid var(--deep);border-radius:16px;padding:12px 10px;font-weight:800;font-size:18px;background:var(--paper);color:var(--deep);box-shadow:0 4px 0 var(--deep),0 8px 14px rgba(0,0,0,.3);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--deep)}
+.btn.play{background:linear-gradient(#ffd84a,#f5b81c);font-size:24px}
+.btn.small{font-size:15px;padding:9px}
+@keyframes drop{from{transform:translate(-50%,-140%)}}
+@keyframes pop{from{transform:scale(0) rotate(-4deg)}}
+
+/* ---------- SELECT ---------- */
+#select{background:linear-gradient(#2893fc,#bfe3ff 55%,#f3d9a4)}
+#select h1{margin:calc(env(safe-area-inset-top) + 18px) 0 4px;text-align:center;color:#fff;font-size:26px;text-shadow:0 3px 0 var(--deep)}
+#select p.sub{margin:0 16px;text-align:center;color:var(--deep);font-weight:700;font-size:14px}
+.cards{display:flex;gap:10px;padding:14px 12px;height:calc(100% - 210px)}
+.card{flex:1;border:4px solid #fff;border-radius:20px;background:rgba(255,255,255,.35);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8px;position:relative;transition:transform .15s,border-color .15s,background .15s}
+.card img{max-width:100%;max-height:78%;object-fit:contain;filter:drop-shadow(0 6px 6px rgba(0,0,0,.3))}
+.card .nm{font-weight:900;font-size:19px;color:var(--deep);margin-top:6px}
+.card .gr{font-size:12px;font-weight:700;color:#334}
+.card.sel{border-color:var(--sand);background:rgba(255,236,170,.7);transform:scale(1.03)}
+#select .go{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 18px);width:70%}
+#select .go:active{transform:translate(-50%,3px)}
+
+/* ---------- LESSON ---------- */
+#lesson{display:none;flex-direction:column;background:#000}
+#lesson.on{display:flex}
+.top{position:relative;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;background:linear-gradient(rgba(0,0,0,.45),transparent)}
+.x{border:0;background:rgba(255,255,255,.85);border-radius:50%;width:34px;height:34px;font-size:18px;font-weight:900;color:var(--deep)}
+.bar{flex:1;height:14px;border-radius:9px;background:rgba(255,255,255,.5);overflow:hidden;border:2px solid #fff}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd84a,#f07a3a);transition:width .4s}
+.figs{background:rgba(255,255,255,.9);border-radius:14px;padding:4px 10px;font-weight:900;color:#6a2a6e;font-size:15px}
+.scene{position:relative;flex:1;min-height:0;overflow:hidden}
+.bg{position:absolute;inset:0}
+/* placeholder van-hire background */
+.bg.vanhire{background:linear-gradient(#3b9bff,#9fd2ff 45%,#e9d3a3 45.2%,#d9bd84)}
+.bg.vanhire .office{position:absolute;left:8%;right:8%;top:14%;height:40%;background:#fbf8f2;border-radius:6px 6px 0 0;box-shadow:inset 0 -10px 0 #e8e0d0}
+.bg.vanhire .roof{position:absolute;left:5%;right:5%;top:11%;height:5%;background:#c8643b;border-radius:4px}
+.bg.vanhire .door{position:absolute;left:40%;width:20%;top:30%;height:24%;background:#2a6cc0;border-radius:4px 4px 0 0}
+.bg.vanhire .win{position:absolute;top:31%;width:16%;height:12%;background:#7cc4ff;border:4px solid #2a6cc0}
+.bg.vanhire .palm{position:absolute;right:2%;top:20%;font-size:70px}
+.bg.vanhire .van{position:absolute;left:3%;top:40%;font-size:64px;transform:scaleX(-1)}
+.gsign{position:absolute;left:18%;right:18%;top:17%;padding:5px 6px;background:#fff;border:3px solid var(--blue);border-radius:6px;text-align:center;color:var(--blue);font-weight:900;font-size:clamp(12px,3.6vw,17px);letter-spacing:.5px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.ph{position:absolute;left:8px;top:8px;font-size:10px;color:rgba(0,0,0,.45);font-weight:700;background:rgba(255,255,255,.5);padding:2px 6px;border-radius:6px}
+.player,.local{position:absolute;bottom:0;transition:transform .25s}
+.player{left:-4%;width:60%;max-height:96%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 0 6px rgba(0,0,0,.3))}
+.player.bump{animation:bump .35s}
+.player.shake{animation:shake .4s}
+@keyframes bump{50%{transform:translateY(-12px) scale(1.03)}}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.local{right:3%;width:38%;bottom:6%;display:flex;flex-direction:column;align-items:center}
+.local .face{width:100%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#e9e2d4);border:4px solid var(--deep);display:flex;align-items:center;justify-content:center;font-size:clamp(54px,17vw,86px);position:relative;box-shadow:0 6px 14px rgba(0,0,0,.35)}
+.local .mood{position:absolute;right:-4px;top:-4px;background:#fff;border-radius:50%;width:38%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.42em;border:3px solid var(--deep)}
+.local .tag{margin-top:6px;background:var(--deep);color:#fff;font-weight:800;font-size:12px;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.local .soon{font-size:9px;color:#fff;opacity:.8;margin-top:2px;text-shadow:0 1px 2px #000}
+
+.panel{position:relative;z-index:4;background:var(--paper);border-top:4px solid var(--deep);border-radius:20px 20px 0 0;padding:12px 14px calc(env(safe-area-inset-bottom) + 12px);max-height:62%;overflow-y:auto;box-shadow:0 -6px 16px rgba(0,0,0,.35)}
+.who{display:inline-block;background:var(--blue);color:#fff;font-weight:800;font-size:12px;padding:2px 10px;border-radius:10px;margin-bottom:6px}
+.who.me{background:var(--sun)}
+.who.narr{background:#777}
+.line{font-size:17px;line-height:1.35}
+.line.narr{font-style:italic;color:#444}
+.greek{display:flex;align-items:center;gap:10px}
+.greek .g{font-size:23px;font-weight:800;color:var(--deep);line-height:1.25}
+.tr{font-size:13px;color:#7a6a50;font-style:italic;margin-top:2px}
+.say{flex:none;border:0;background:var(--blue);color:#fff;border-radius:50%;width:40px;height:40px;font-size:18px;box-shadow:0 3px 0 var(--deep)}
+.say:active{transform:translateY(2px);box-shadow:none}
+.en{margin-top:6px;font-size:14px;color:#555}
+.reveal{border:0;background:none;color:var(--blue);font-weight:700;font-size:13px;padding:4px 0;text-decoration:underline}
+.prompt{font-weight:800;margin:10px 0 8px;font-size:15px;color:#3b2f1a}
+.bigsign{margin:4px auto 10px;max-width:92%;background:#fff;border:4px solid var(--blue);border-radius:8px;padding:10px;text-align:center;color:var(--blue);font-weight:900;font-size:22px;letter-spacing:1px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;border:3px solid #cdbb94;border-radius:14px;background:#fff;padding:10px 12px;font-size:17px;font-weight:700;color:var(--ink);box-shadow:0 3px 0 #cdbb94}
+.opt .s{display:block;font-size:12px;font-weight:600;color:#8a7a5c;font-style:italic}
+.opt.right{border-color:var(--good);background:#e5f6e9;box-shadow:0 3px 0 var(--good)}
+.opt.wrong{border-color:var(--bad);background:#fbe6e6;box-shadow:0 3px 0 var(--bad)}
+.opt:disabled{cursor:default}
+.fb{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.4}
+.fb.good{background:#e5f6e9;border:2px solid var(--good)}
+.fb.bad{background:#fbe6e6;border:2px solid var(--bad)}
+.fb b{display:block;font-size:16px;margin-bottom:2px}
+.next{margin-top:10px;width:100%}
+.tiles,.answer{display:flex;flex-wrap:wrap;gap:8px;min-height:48px}
+.answer{border-bottom:3px dashed #cdbb94;padding:6px 0 10px;margin-bottom:10px}
+.tile{border:3px solid #cdbb94;background:#fff;border-radius:12px;padding:7px 12px;font-size:18px;font-weight:800;color:var(--deep);box-shadow:0 3px 0 #cdbb94}
+.tile.used{visibility:hidden}
+
+/* ---------- END ---------- */
+#end{background:linear-gradient(#2893fc,#ffe2a8);overflow-y:auto}
+#end .wrap{padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 24px);text-align:center}
+#end h1{color:#fff;text-shadow:0 3px 0 var(--deep);margin:6px 0}
+#end .face{width:58%;max-width:260px}
+.score{font-size:18px;font-weight:800;color:var(--deep);margin:6px 0 14px}
+.learned{text-align:left;background:var(--paper);border:3px solid var(--deep);border-radius:16px;padding:10px 12px;margin-bottom:14px}
+.learned h3{margin:2px 0 8px;color:var(--deep)}
+.lr{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #e3d5b5}
+.lr:first-of-type{border-top:0}
+.lr .t{flex:1}
+.lr .g{font-weight:800;color:var(--deep)}
+.lr .e{font-size:13px;color:#666}
+.lr .say{width:34px;height:34px;font-size:15px}
+.soonbox{background:rgba(255,255,255,.7);border-radius:14px;padding:10px;font-weight:700;color:var(--deep);margin-bottom:14px}
+
+/* ---------- SETTINGS ---------- */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.on{display:flex}
+.sheet{background:var(--paper);border:4px solid var(--deep);border-radius:20px;padding:16px;width:min(88%,380px)}
+.sheet h2{margin:0 0 10px;color:var(--deep)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #e3d5b5;font-weight:700}
+.row:first-of-type{border-top:0}
+.tog{width:52px;height:30px;border-radius:15px;border:0;background:#bbb;position:relative}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s}
+.tog.on{background:var(--good)}
+.tog.on::after{left:25px}
+.note{font-size:12px;color:#7a6a50;margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<section id="title" class="screen on">
+  <div class="frame">
+    <div class="sign">Σιδάρι<small>Sidari</small></div>
+    <img class="tagline" src="assets/tagline.webp" alt="Learn Greek. Cause Chaos.">
+    <div class="menu">
+      <button class="btn play" id="bPlay">▶ Play</button>
+      <button class="btn small" id="bSettings">⚙ Settings</button>
+    </div>
+  </div>
+  <img class="logo" src="assets/logo.webp" alt="Big Dave &amp; Gobby Sharon's Sidari Quest">
+</section>
+
+<!-- CHARACTER SELECT -->
+<section id="select" class="screen">
+  <h1>Who are you playing as?</h1>
+  <p class="sub">This decides whether you learn the man's or woman's form of Greek words.</p>
+  <div class="cards">
+    <button class="card" data-c="m"><img src="assets/dave_full.webp" alt=""><div class="nm">Big Dave</div><div class="gr">είμαι έτοιμος</div></button>
+    <button class="card" data-c="f"><img src="assets/sharon_full.webp" alt=""><div class="nm">Gobby Sharon</div><div class="gr">είμαι έτοιμη</div></button>
+  </div>
+  <button class="btn play go" id="bGo" disabled style="opacity:.5">Let's go!</button>
+</section>
+
+<!-- LESSON -->
+<section id="lesson" class="screen">
+  <div class="top">
+    <button class="x" id="bQuit" aria-label="Quit">✕</button>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="figs" id="figs">🟣 0</div>
+  </div>
+  <div class="scene" id="scene">
+    <div class="bg vanhire">
+      <div class="roof"></div><div class="office"></div>
+      <div class="win" style="left:14%"></div><div class="win" style="right:14%"></div>
+      <div class="door"></div>
+      <div class="van">🚐</div><div class="palm">🌴</div>
+      <div class="gsign">ΕΝΟΙΚΙΑΣΕΙΣ ΑΥΤΟΚΙΝΗΤΩΝ</div>
+      <div class="ph">placeholder background</div>
+    </div>
+    <img class="player" id="player" alt="">
+    <div class="local" id="local">
+      <div class="face"><span>👨🏻</span><div class="mood" id="mood">🙂</div></div>
+      <div class="tag">Spyros Rent-a-Van</div>
+      <div class="soon">art coming soon</div>
+    </div>
+  </div>
+  <div class="panel" id="panel"></div>
+</section>
+
+<!-- END -->
+<section id="end" class="screen"><div class="wrap" id="endWrap"></div></section>
+
+<!-- SETTINGS -->
+<div class="modal" id="settings">
+  <div class="sheet">
+    <h2>Settings</h2>
+    <div class="row">Show Latin letters under Greek <button class="tog" id="tTr"></button></div>
+    <div class="row">Slow Greek audio <button class="tog" id="tSlow"></button></div>
+    <div class="row">Change character <button class="btn small" id="bChange">Change</button></div>
+    <p class="note" id="voiceNote"></p>
+    <button class="btn next" id="bClose">Done</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------- storage ---------- */
+const S = (()=>{let d={c:null,tr:true,slow:false,figs:0};try{Object.assign(d,JSON.parse(localStorage.getItem("sidariQuest")||"{}"))}catch(e){}return d})();
+function save(){try{localStorage.setItem("sidariQuest",JSON.stringify(S))}catch(e){}}
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const G=x=>x&&typeof x==="object"&&("m" in x)?x[S.c||"m"]:x;
+const NAME=()=>S.c==="f"?"Sharon":"Dave";
+const fill=s=>String(G(s)).replace(/\{P\}/g,NAME()).replace(/\{PG\}/g,S.c==="f"?"Σάρον":"Ντέιβ");
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id))}
+
+/* ---------- Greek transliteration ---------- */
+function translit(str){
+  const n=str.normalize("NFD");const L=[];
+  for(const ch of n){
+    if(ch==="́"){if(L.length)L[L.length-1].acc=true;continue}
+    if(ch==="̈"){if(L.length)L[L.length-1].dia=true;continue}
+    L.push({c:ch,acc:false,dia:false,up:ch!==ch.toLowerCase()});
+  }
+  const low=c=>c.toLowerCase().replace("ς","σ");
+  const voiceless="θκξπστφχψ";
+  const one={α:"a",β:"v",γ:"g",δ:"d",ε:"e",ζ:"z",η:"i",θ:"th",ι:"i",κ:"k",λ:"l",μ:"m",ν:"n",ξ:"x",ο:"o",π:"p",ρ:"r",σ:"s",τ:"t",υ:"i",φ:"f",χ:"h",ψ:"ps",ω:"o"};
+  const ac={a:"á",e:"é",i:"í",o:"ó",u:"ú"};
+  const accent=(s,last)=>{if(last){const i=s.search(/[aeiou](?!.*[aeiou])/);return i<0?s:s.slice(0,i)+ac[s[i]]+s.slice(i+1)}const i=s.search(/[aeiou]/);return i<0?s:s.slice(0,i)+ac[s[i]]+s.slice(i+1)};
+  let out="",i=0,startWord=true;
+  while(i<L.length){
+    const a=L[i],b=L[i+1],ca=low(a.c),cb=b?low(b.c):"";let s=null,adv=1,acc=a.acc,last=false;
+    if(!/[α-ω]/.test(ca)){out+=a.c;i++;startWord=true;continue}
+    const di=b&&!b.dia&&!a.acc;
+    if(di&&ca==="ο"&&cb==="υ"){s="ou";adv=2;acc=a.acc||b.acc;last=true}
+    else if(di&&ca==="α"&&cb==="ι"){s="e";adv=2;acc=a.acc||b.acc}
+    else if(di&&(ca==="ε"||ca==="ο"||ca==="υ")&&cb==="ι"){s="i";adv=2;acc=a.acc||b.acc}
+    else if(di&&(ca==="α"||ca==="ε")&&cb==="υ"){const nx=L[i+2]?low(L[i+2].c):"";s=(ca==="α"?"a":"e")+((!nx||!/[α-ω]/.test(nx)||voiceless.includes(nx))?"f":"v");adv=2;acc=a.acc||b.acc}
+    else if(ca==="μ"&&cb==="π"){s=startWord?"b":"mb";adv=2}
+    else if(ca==="ν"&&cb==="τ"){s=startWord?"d":"nd";adv=2}
+    else if(ca==="γ"&&cb==="κ"){s=startWord?"g":"ng";adv=2}
+    else if(ca==="γ"&&cb==="γ"){s="ng";adv=2}
+    else if(ca==="γ"&&/[ειηυ]/.test(cb)){s="y"}
+    else s=one[ca]||ca;
+    if(acc)s=accent(s,last);
+    if(a.up&&startWord)s=s[0].toUpperCase()+s.slice(1);
+    out+=s;i+=adv;startWord=false;
+  }
+  return out;
+}
+
+/* ---------- speech ---------- */
+let greekVoice=null;
+function findVoice(){try{const v=speechSynthesis.getVoices();greekVoice=v.find(x=>/^el/i.test(x.lang))||null}catch(e){}}
+try{findVoice();speechSynthesis.onvoiceschanged=findVoice}catch(e){}
+function speak(t){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(t);u.lang="el-GR";if(greekVoice)u.voice=greekVoice;
+    u.rate=S.slow?0.6:0.9;speechSynthesis.speak(u);
+  }catch(e){}
+}
+function greekBlock(gr,big=true){
+  const w=el("div");const row=el("div","greek");
+  const g=el("div","g",gr);if(!big)g.style.fontSize="19px";
+  const b=el("button","say","🔊");b.onclick=e=>{e.stopPropagation();speak(gr)};
+  row.append(g,b);w.append(row);
+  if(S.tr)w.append(el("div","tr",translit(gr)));
+  return w;
+}
+
+/* ---------- LESSON 1 SCRIPT ---------- */
+const LESSON1={
+  title:"Spyros Rent-a-Van",
+  local:"Spyros",
+  steps:[
+    {t:"narr",text:"Corfu Airport. 35°C. {P} spots the van hire office.",face:"normal",mood:"🙂"},
+    {t:"q",kind:"sign",sign:"ΕΝΟΙΚΙΑΣΕΙΣ ΑΥΤΟΚΙΝΗΤΩΝ",prompt:"What does the sign say?",
+      opts:[{en:"Car hire",ok:1},{en:"Car park"},{en:"Car wash"}],
+      why:"ενοικιάσεις = rentals, αυτοκινήτων = of cars. You'll see this sign all over Corfu.",
+      bad:{m:"Dave tries to park in it.",f:"Sharon asks it for directions."},
+      learn:["Ενοικιάσεις αυτοκινήτων","Car hire"]},
+    {t:"me",text:{m:"ALRIGHT MATE! I… WANT… A… VAN!",f:"HIYA DARLIN'! WE… WANT… A… VAN!"},face:"talking"},
+    {t:"local",gr:"Καλημέρα.",en:"Good morning.",mood:"😒"},
+    {t:"q",kind:"reply",prompt:"Greet him back properly:",
+      opts:[{gr:"Καλημέρα!",en:"Good morning!",ok:1},{gr:"Καληνύχτα!",en:"Good night!"},{gr:"Γεια μας!",en:"Cheers!"}],
+      why:"Καλημέρα until about midday, then καλησπέρα (good afternoon/evening). Καληνύχτα is only for bedtime.",
+      bad:"It's nine in the morning, {P}.",
+      learn:["Καλημέρα","Good morning"]},
+    {t:"local",gr:"Έχετε κάνει κράτηση;",en:"Have you made a booking?",mood:"🙂"},
+    {t:"q",kind:"reply",prompt:"Answer him:",
+      opts:[{gr:"Ναι, στο όνομα {PG}.",en:"Yes, in the name {P}.",ok:1},{gr:"Όχι, είμαι από το Μπούτλ.",en:"No, I'm from Bootle."},{gr:"Ναι, ένα φραπέ.",en:"Yes, a frappé."}],
+      why:"Στο όνομα… = in the name of… Works for hotels and restaurants too. Note the Greek question mark is ; not ?",
+      bad:{m:"Spyros did not ask where you're from, Dave.",f:"Spyros did not ask for your life story, Sharon."},
+      learn:["Στο όνομα…","In the name of…"]},
+    {t:"build",prompt:"Tell him: I'd like a van.",answer:"Θα ήθελα ένα βαν",extra:["θέλω","αυτοκίνητο"],
+      why:"Θα ήθελα = I would like. Politer than θέλω (I want). Greeks use the English word βαν.",
+      learn:["Θα ήθελα ένα βαν","I'd like a van"]},
+    {t:"q",kind:"meaning",gr:"Για πόσες μέρες;",prompt:"What is Spyros asking?",
+      opts:[{en:"For how many days?",ok:1},{en:"How many people?"},{en:"How much money have you got?"}],
+      why:"πόσες = how many, μέρες = days.",
+      bad:"Close, but listen for μέρες — days.",
+      learn:["Για πόσες μέρες;","For how many days?"]},
+    {t:"q",kind:"reply",prompt:"Tell him you need it until September:",
+      opts:[{gr:"Μέχρι τον Σεπτέμβριο.",en:"Until September.",ok:1},{gr:"Στις τέσσερις.",en:"At four o'clock."},{gr:"Τέσσερα ευρώ.",en:"Four euros."}],
+      why:"μέχρι = until. Spyros's eyes light up. Four months of rental!",
+      bad:"Spyros laughs. Nobody hires a van for four euros.",
+      learn:["Μέχρι τον Σεπτέμβριο","Until September"],moodGood:"😃"},
+    {t:"q",kind:"meaning",gr:"Εξακόσια ευρώ τον μήνα.",prompt:"How much is it?",
+      opts:[{en:"€600 a month",ok:1},{en:"€60 a month"},{en:"€600 a week"}],
+      why:"εξακόσια = six hundred, τον μήνα = per month.",
+      good:"Correct… and {P} is not happy about it.",faceGood:"shocked",
+      bad:"If only. εξακόσια is six hundred.",
+      learn:["Τον μήνα","Per month"]},
+    {t:"local",gr:"Το δίπλωμα και το διαβατήριο, παρακαλώ.",en:"Your driving licence and passport, please.",mood:"🙂"},
+    {t:"q",kind:"reply",prompt:"Hand them over. What do you say?",
+      opts:[{gr:"Ορίστε.",en:"Here you are.",ok:1},{gr:"Καλή όρεξη.",en:"Enjoy your meal."},{gr:"Δεν πειράζει.",en:"Never mind."}],
+      why:"Ορίστε = here you are. It also means 'Pardon?' and it's how Greeks answer the phone.",
+      bad:"Spyros is not having his dinner, {P}.",
+      learn:["Ορίστε","Here you are"]},
+    {t:"local",gr:"Ευχαριστώ. Είστε έτοιμοι;",en:"Thank you. Are you ready?",mood:"😃"},
+    {t:"q",kind:"say",prompt:"Say: I'm ready!",
+      opts:[{gr:{m:"Είμαι έτοιμος!",f:"Είμαι έτοιμη!"},en:"I'm ready!",ok:1},
+            {gr:{m:"Είμαι έτοιμη!",f:"Είμαι έτοιμος!"},en:{m:"I'm ready! (woman's form)",f:"I'm ready! (man's form)"}},
+            {gr:{m:"Είμαι κουρασμένος!",f:"Είμαι κουρασμένη!"},en:"I'm tired!"}],
+      why:{m:"έτοιμος is the man's form. Sharon would say έτοιμη.",f:"έτοιμη is the woman's form. Dave would say έτοιμος."},
+      bad:{m:"That's what Sharon would say, Dave.",f:"That's what Dave would say, Sharon."},
+      learn:[{m:"Είμαι έτοιμος",f:"Είμαι έτοιμη"},"I'm ready"]},
+    {t:"narr",text:"{P} slaps two Union Jack magnets on the van doors.",face:"proud",mood:"😒"},
+    {t:"q",kind:"meaning",gr:"Προσέξτε το βαν, σας παρακαλώ!",prompt:"What did Spyros just say?",
+      opts:[{en:"Please be careful with the van!",ok:1},{en:"Please bring it back with a full tank!"},{en:"Please park it over there!"}],
+      why:"Προσέξτε = be careful, watch out. On signs you'll see ΠΡΟΣΟΧΗ (caution).",
+      bad:"Fair guess, but προσέξτε means be careful.",
+      learn:["Προσέξτε!","Be careful!"]},
+    {t:"me",text:{m:"Don't worry, Spyros mate. I've been driving vans for thirty years.",f:"Don't worry darlin'. Dave's been driving vans for thirty years."},face:"talking",mood:"😒"}
+  ]
+};
+
+/* ---------- lesson engine ---------- */
+let L,idx,score,qTotal,earned,learned;
+const player=$("#player"),panel=$("#panel"),moodEl=$("#mood");
+function face(f,anim){player.src=`assets/${S.c==="f"?"sharon":"dave"}_${f}.webp`;if(anim){player.classList.remove("bump","shake");void player.offsetWidth;player.classList.add(anim)}}
+function mood(m){if(m)moodEl.textContent=m}
+function startLesson(){
+  L=LESSON1;idx=0;score=0;earned=0;learned=[];
+  qTotal=L.steps.filter(s=>s.t==="q"||s.t==="build").length;
+  face("normal");mood("🙂");updateTop();show("lesson");$("#lesson").classList.add("on");render();
+}
+function updateTop(){$("#prog").style.width=(idx/L.steps.length*100)+"%";$("#figs").textContent="🟣 "+(S.figs)}
+function nextBtn(label="Continue"){const b=el("button","btn play next",label);b.onclick=()=>{idx++;updateTop();idx>=L.steps.length?finish():render()};return b}
+function render(){
+  const st=L.steps[idx];panel.innerHTML="";panel.scrollTop=0;
+  if(st.mood)mood(st.mood);
+  if(st.t==="narr"){
+    face(st.face||"normal");
+    panel.append(el("div","who narr","Meanwhile…"),el("div","line narr",fill(st.text)),nextBtn());
+  }else if(st.t==="me"){
+    face(st.face||"talking","bump");
+    panel.append(el("div","who me",NAME()),el("div","line",fill(st.text)),nextBtn());
+  }else if(st.t==="local"){
+    face("normal");speak(st.gr);
+    const en=el("div","en");const r=el("button","reveal","Show English");r.onclick=()=>{en.textContent=st.en;r.remove()};
+    panel.append(el("div","who",L.local),greekBlock(st.gr),r,en,nextBtn());
+  }else if(st.t==="q"){renderQ(st)}
+  else if(st.t==="build"){renderBuild(st)}
+}
+function renderQ(st){
+  face(st.kind==="meaning"?"confused":"normal");
+  if(st.kind==="meaning"&&st.gr){panel.append(el("div","who",L.local),greekBlock(st.gr));speak(st.gr)}
+  if(st.kind==="sign")panel.append(el("div","bigsign",st.sign));
+  panel.append(el("div","prompt",fill(st.prompt)));
+  const box=el("div","opts");
+  shuffle(st.opts).forEach(o=>{
+    const b=el("button","opt");
+    if(o.gr){b.innerHTML=fill(o.gr)+(S.tr?`<span class="s">${translit(fill(o.gr))}</span>`:"")}
+    else b.textContent=fill(o.en);
+    b.onclick=()=>answer(st,o,b,box);
+    box.append(b);
+  });
+  panel.append(box);
+}
+function answer(st,o,b,box){
+  [...box.children].forEach(x=>x.disabled=true);
+  const ok=!!o.ok;
+  if(o.gr)speak(fill(o.gr));
+  const fb=el("div","fb "+(ok?"good":"bad"));
+  if(ok){
+    b.classList.add("right");score++;earned++;S.figs++;save();
+    face(st.faceGood||"proud","bump");mood(st.moodGood||"😃");
+    fb.innerHTML=`<b>${st.good?fill(st.good):"Σωστά! — Correct!"}</b>${fill(st.why)}`;
+  }else{
+    b.classList.add("wrong");
+    const corr=st.opts.find(x=>x.ok);
+    [...box.children].forEach(x=>{const t=corr.gr?fill(corr.gr):fill(corr.en);if(x.textContent.startsWith(t))x.classList.add("right")});
+    face("cringe","shake");mood("😒");
+    const ans=corr.gr?`${fill(corr.gr)} <i>(${fill(corr.en)})</i>`:fill(corr.en);
+    fb.innerHTML=`<b>${fill(st.bad||"Not quite.")}</b>Answer: ${ans}<br>${fill(st.why)}`;
+  }
+  if(st.learn)learned.push(st.learn);
+  updateTop();
+  panel.append(fb,nextBtn());
+  setTimeout(()=>fb.scrollIntoView({behavior:"smooth",block:"nearest"}),50);
+}
+function renderBuild(st){
+  face("normal");
+  const words=st.answer.split(" ");
+  panel.append(el("div","prompt",fill(st.prompt)));
+  const ans=el("div","answer"),tiles=el("div","tiles");
+  const picked=[];
+  shuffle(words.concat(st.extra||[])).forEach(w=>{
+    const t=el("button","tile",w);
+    t.onclick=()=>{
+      if(t.classList.contains("used"))return;
+      t.classList.add("used");
+      const a=el("button","tile",w);a.onclick=()=>{a.remove();t.classList.remove("used");picked.splice(picked.indexOf(a),1)};
+      picked.push(a);ans.append(a);speak(w);
+    };
+    tiles.append(t);
+  });
+  const check=el("button","btn play next","Check");
+  check.onclick=()=>{
+    const said=[...ans.children].map(x=>x.textContent).join(" ");
+    if(!said)return;
+    check.remove();[...tiles.children,...ans.children].forEach(x=>x.disabled=true);
+    const ok=said===st.answer;speak(st.answer);
+    const fb=el("div","fb "+(ok?"good":"bad"));
+    if(ok){score++;earned++;S.figs++;save();face("proud","bump");mood("😃");fb.innerHTML=`<b>Σωστά! — Correct!</b>${st.why}`}
+    else{face("cringe","shake");mood("😒");fb.innerHTML=`<b>Not quite.</b>Answer: <b style="display:inline;font-size:inherit">${st.answer}</b><br>${st.why}`}
+    learned.push(st.learn);updateTop();panel.append(fb,nextBtn());
+    setTimeout(()=>fb.scrollIntoView({behavior:"smooth",block:"nearest"}),50);
+  };
+  panel.append(ans,tiles,check);
+}
+function finish(){
+  const good=score>=qTotal-2;
+  const w=$("#endWrap");w.innerHTML="";
+  const f=el("img","face");f.src=`assets/${S.c==="f"?"sharon":"dave"}_${good?"proud":"cringe"}.webp`;
+  w.append(el("h1",null,"Van acquired! 🚐"),f,
+    el("div","score",`${score} / ${qTotal} right · +${earned} figs 🟣`));
+  const lb=el("div","learned");lb.append(el("h3",null,"Phrases you learned"));
+  learned.forEach(([g,e])=>{
+    g=fill(g);const r=el("div","lr");const t=el("div","t");
+    t.append(el("div","g",g));if(S.tr)t.append(el("div","tr",translit(g)));t.append(el("div","e",fill(e)));
+    const b=el("button","say","🔊");b.onclick=()=>speak(g);r.append(t,b);lb.append(r);
+  });
+  w.append(lb,el("div","soonbox","Next: The Apartment — Kyria Eleni, Kyrios Spyros, and no buffet.<br><small>Coming soon</small>"));
+  const again=el("button","btn play next","Play again");again.onclick=startLesson;
+  const home=el("button","btn next","Back to title");home.onclick=()=>show("title");
+  w.append(again,home);
+  $("#lesson").classList.remove("on");show("end");
+}
+
+/* ---------- title / select / settings wiring ---------- */
+$("#bPlay").onclick=()=>{S.c?startLesson():openSelect()};
+function openSelect(){show("select");document.querySelectorAll(".card").forEach(c=>c.classList.toggle("sel",c.dataset.c===S.c));updGo()}
+function updGo(){const g=$("#bGo");g.disabled=!S.c;g.style.opacity=S.c?1:.5}
+document.querySelectorAll(".card").forEach(c=>c.onclick=()=>{S.c=c.dataset.c;save();document.querySelectorAll(".card").forEach(x=>x.classList.toggle("sel",x===c));updGo()});
+$("#bGo").onclick=()=>{if(S.c)startLesson()};
+$("#bQuit").onclick=()=>{try{speechSynthesis.cancel()}catch(e){}$("#lesson").classList.remove("on");show("title")};
+const tTr=$("#tTr"),tSlow=$("#tSlow");
+function syncTogs(){tTr.classList.toggle("on",S.tr);tSlow.classList.toggle("on",S.slow)}
+tTr.onclick=()=>{S.tr=!S.tr;save();syncTogs()};
+tSlow.onclick=()=>{S.slow=!S.slow;save();syncTogs()};
+$("#bSettings").onclick=()=>{findVoice();$("#voiceNote").textContent=greekVoice?"Greek voice found ✓":"No Greek voice found on this device. On iPhone: Settings → Accessibility → Spoken Content → Voices → Greek.";syncTogs();$("#settings").classList.add("on")};
+$("#bClose").onclick=()=>$("#settings").classList.remove("on");
+$("#bChange").onclick=()=>{$("#settings").classList.remove("on");openSelect()};
+
+/* ---------- PWA ---------- */
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
+</script>
+</body>
+</html>

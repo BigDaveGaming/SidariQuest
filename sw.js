@@ -1,0 +1,5 @@
+const C="sidari-quest-v1";
+const F=["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-180.png", "assets/dave_confused.webp", "assets/dave_cringe.webp", "assets/dave_full.webp", "assets/dave_fuming.webp", "assets/dave_normal.webp", "assets/dave_proud.webp", "assets/dave_shocked.webp", "assets/dave_talking.webp", "assets/logo.webp", "assets/sharon_confused.webp", "assets/sharon_cringe.webp", "assets/sharon_full.webp", "assets/sharon_fuming.webp", "assets/sharon_normal.webp", "assets/sharon_proud.webp", "assets/sharon_shocked.webp", "assets/sharon_talking.webp", "assets/tagline.webp", "assets/title_bg.webp"];
+self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(F)).then(()=>self.skipWaiting()))});
+self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
+self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});

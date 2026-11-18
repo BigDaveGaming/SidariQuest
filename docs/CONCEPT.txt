@@ -1,0 +1,180 @@
+BIG DAVE & GOBBY SHARON'S SIDARI QUEST
+"Learn Greek. Cause Chaos."
+A Big Dave Gaming production
+Game concept — v2 (settled decisions)
+
+==================================================
+1. THE PITCH
+==================================================
+
+Big Dave and Gobby Sharon from Bootle have rented an apartment in Sidari,
+on the north coast of Corfu, for the WHOLE SUMMER (May to September).
+They are "that couple": loud Brits abroad who think speaking English
+slowly and loudly counts as Greek. It has stopped working.
+
+Dave booked it thinking it was all-inclusive. It's self-catering.
+Now they have to learn Greek just to eat.
+
+Sidari Quest is an ad-free, offline phone game (PWA) that teaches
+practical, everyday Modern Greek — what you actually say on holiday in
+Greece. Each lesson is a real situation; the right Greek gets you out of a
+Dave-or-Sharon disaster, the wrong answer gets a cringe moment.
+
+The joke: the game teaches you to be LESS like them.
+
+==================================================
+2. PLAYING AS DAVE OR SHARON
+==================================================
+
+You choose Big Dave or Gobby Sharon. Your choice decides whether the game
+teaches the male or female forms of Greek (Dave: "είμαι κουρασμένος",
+Sharon: "είμαι κουρασμένη" — I'm tired), and changes the jokes and
+reactions you get.
+
+==================================================
+3. THE CHARACTERS
+==================================================
+
+BIG DAVE
+50s, bald, sunburnt head, grey stubble, sunglasses on head. Palm-tree
+vest, gold chain, gold watch, tribal tattoos, shorts, white socks,
+sliders. Confident about everything, right about very little. Can't be
+without a white van even on holiday: hired one at the airport and slapped
+on the Union Jack magnets he packed specially.
+
+GOBBY SHARON
+40s/50s, copper-ginger messy bun, drawn-on brows, huge lashes, big lips,
+gold hoops, leopard-print bikini top, leopard phone case, phone always in
+hand. Talks to everyone, never stops, calls every waiter "darlin'".
+400 posts in the Sidari Expats Facebook group; left a one-star review
+because the taverna had no chips. Sharon's selfie spot: the Canal d'Amour.
+
+Unlockable outfit: "Just arrived from Bootle" (Dave in a paint-splattered
+navy hoodie, Sharon in a black puffer gilet — in 30°C heat).
+
+THE LOCALS — the Spyros running joke
+Spyros is hugely common on Corfu (the island's patron saint is Saint
+Spyridon), so roughly every fourth Greek man is a Spyros, told apart by
+nickname. Each one teaches an adjective. Dave and Sharon can never keep
+them straight.
+
+- Kyria Eleni — the landlady. Yiayia, brings figs, sees everything.
+- Kyrios Spyros (ο κύριος Σπύρος / "Κύριε Σπύρο!") — the landlord, Eleni's
+  husband. The only Spyros they're respectful to, because he holds the
+  deposit. Teaches formal address.
+- Spyros Rent-a-Van — the van hire man. Inspects every new scratch.
+- Μεγάλος Σπύρος (Big Spyros) — the taverna. Huge, endlessly patient.
+- Μικρός Σπύρος (Little Spyros) — the baker. Tiny, up at 6am.
+- Χοντρός Σπύρος (Fat Spyros) — the mini market. Lives behind the till.
+- Γέρο-Σπύρος (Old Spyros) — outside the kafeneio, judging.
+- Ψηλός Σπύρος (Tall Spyros) — the taxi driver, folded into a tiny car.
+- Katerina — the pharmacist. Has seen every sunburn.
+- The cat — a stray that steals Dave's chips. Pure chaos.
+
+==================================================
+4. SIDARI (researched)
+==================================================
+
+- Small village (around 400 residents), a fishing village until 1980s
+  tourism.
+- The Strip: the busy main road behind the main beach, lined with British
+  pubs, big-screen football, bingo, karaoke, tribute acts, full English
+  breakfasts everywhere, gift shops and supermarkets open late.
+- Main beach: long, sandy, shallow, Blue Flag; beach cafés with their own
+  sunbeds (buy a drink, get a sunbed); banana boats, pedalos.
+- Old fishing harbour: boat hire.
+- Souvenir market: olive-wood bowls, handmade shoes, knick-knacks.
+- Canal d'Amour: golden sandstone cliffs and coves. Scenery/selfie spot
+  ONLY — no swimming-the-channel jokes (it's genuinely dangerous).
+- Sidari Water Park.
+- Bus: KTEL "green bus" to Corfu Town (about an hour) — it's a plain white
+  European coach, not green. Dave waits for a green bus while three white
+  coaches go past. Lesson: read the sign, not the colour.
+- Day trips: Sunset Beach (Logas) at Peroulades — 66 steps; Corfu Town;
+  ferries to the Diapontia islands (Ereikoussa, Mathraki, Othonoi).
+
+PARODY BAR NAMES (swap for something with the same meaning, not puns)
+- B.E.D.             -> C.O.U.C.H. (Cocktails · Oldies · Unlimited Chips ·
+                        Hangovers)
+- Madison Bar & Diner -> Jefferson Bar & Diner
+- Babylon            -> Baghdad
+- S.O.S.             -> Mayday
+- The Three Little Pigs -> The Three Blind Mice
+- Calypso Beach Bar  -> Circe Beach Bar
+- Bolero Irish Bar   -> Tango Irish Bar
+- C by Caesars       -> N by Napoleons
+- Crossroad          -> Junction
+- Salt and Pepper    -> Oil & Vinegar
+- Mojitos            -> Daiquiris
+- Siesta Bar         -> Forty Winks
+- Scooby's           -> Rover's
+- The Vine Wine Bar  -> The Olive Tree Wine Bar
+- Kelly's Ice House  -> Murphy's Igloo
+- Greek Village      -> Greek Hamlet
+
+==================================================
+5. STORY & CHAPTERS
+==================================================
+
+INTRO (short comic, not a lesson)
+Landing in Corfu (Sharon filming for Facebook, Dave asleep), baggage
+reclaim (Dave's giant case last off), walking out under the airport signs
+— first Greek words: ΑΦΙΞΕΙΣ (Arrivals), ΑΠΟΣΚΕΥΕΣ (Baggage),
+ΕΞΟΔΟΣ (Exit).
+
+CHAPTER 1 — "Where's the Buffet?"  (FIRST BUILD)
+1. Spyros Rent-a-Van — the holiday rep waves them towards the airport
+   transfer coach; Dave refuses ("I'm not sitting on a coach for two hours
+   stopping at every hotel in Corfu") and marches off to hire a van.
+   The magnets go on.
+2. The apartment — Kyria Eleni and Kyrios Spyros show them round.
+   "Where's the buffet?" There isn't one. Dave fumes.
+3. The mini market — get food or starve. Fat Spyros at the till.
+
+LATER CHAPTERS
+4. The bakery & kiosk          5. The beach (sunbeds, umbrellas)
+6. The taverna (Big Spyros)     7. The pharmacy (the sunburn arrives)
+8. The Strip at night           9. Day trips (bus, boat, directions)
+10. Emergencies (112)           11. End of summer — goodbyes
+
+==================================================
+6. HOW THE GAME WORKS
+==================================================
+
+EVERY LESSON = TEACH, THEN PRACTISE
+1. Phrasebook first: before the scene, Dave/Sharon's phrasebook teaches
+   the 5–6 phrases for that lesson, one card at a time — Greek with audio
+   and Latin letters, meaning, word-by-word breakdown, a tip, then an easy
+   check straight after each card.
+2. The scene: use what you've just learned with the locals. Each phrase
+   has a 📖 hint button the first time it appears.
+3. Anything you get wrong comes back at the end of the lesson until you
+   get it right.
+
+- Map of Sidari: places unlock as you progress; small May–September
+  progress bar on top.
+- Scenes: location background + cut-out characters whose faces change
+  with your answers (Dave/Sharon: normal, proud, confused, cringe,
+  fuming, shocked, talking; locals: normal, pleased, unimpressed).
+- Question types: what does this mean, how do you say it, listen and
+  choose, build the sentence, what do you reply, read the sign, price
+  check.
+- Greek on signs is added by the game (always correct), and doubles as
+  reading practice.
+- Spaced repetition, optional transliteration, slow audio, male/female
+  forms based on your character, formal vs informal explained.
+- Rewards: figs from Kyria Eleni; streak = "days without embarrassing
+  yourself"; achievements ("Parked Legally", "Ordered Without Pointing",
+  "Kyria Eleni Smiled").
+
+==================================================
+7. ART DIRECTION
+==================================================
+
+Bright painted cartoon style matching reference/style_reference_title_
+screen.png. Holiday attire is the main look for Dave and Sharon.
+Palette: Greek blue, white, turquoise sea, sandstone gold, sunset orange,
+olive green, copper ginger (Sharon), bougainvillea pink.
+
+Tech: PWA (installable, offline, no ads), hosted on GitHub Pages
+(BigDaveGaming/SidariQuest).
