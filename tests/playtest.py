@@ -24,6 +24,8 @@ def play(page, character, retry=False, resume=False):
         page.locator(f'.card[data-c="{character}"]').click()
         page.locator("#bGo").click()
     tested_retry = False
+    if retry:
+        assert page.evaluate("CHAPTER.steps.every(step => step.opts?.every(option => option.en) ?? true)")
     for position, step in enumerate(page.evaluate("CHAPTER.steps")):
         panel = page.locator("#panel")
         if step["t"] == "q":
@@ -34,6 +36,8 @@ def play(page, character, retry=False, resume=False):
                     label = option.get("gr", option.get("en"))
                     panel.locator(".opt").filter(has_text=label).click()
                     responses.append(panel.locator(".fb.bad b").inner_text())
+                    meaning = panel.locator(".fb.bad .answer-meaning").inner_text()
+                    assert meaning == f'You said “{option["en"]}”'
                     assert not panel.get_by_role("button", name="Continue").count()
                     panel.get_by_role("button", name="Try again").click()
                 assert len(set(responses)) == 2

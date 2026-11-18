@@ -89,6 +89,7 @@ button{font-family:inherit;cursor:pointer}
 .fb{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.4}
 .fb.good{background:#e5f6e9;border:2px solid var(--good)}
 .fb.bad{background:#fbe6e6;border:2px solid var(--bad)}
+.answer-meaning{margin:0 0 6px;font-weight:800}
 .fb b{display:block;font-size:16px;margin-bottom:2px}
 .next{margin-top:10px;width:100%}
 .tiles,.answer{display:flex;flex-wrap:wrap;gap:8px;min-height:48px}
@@ -429,13 +430,13 @@ function render(){
       b.classList.add(o.ok?"right":"wrong");
       if(gr)speak(gr);
       const wrong=st.opts.filter(option=>!option.ok).indexOf(o);
-      feedback(st,!!o.ok,st.badOptions?.[wrong],wrong);
+      feedback(st,!!o.ok,st.badOptions?.[wrong],wrong,o);
     };
     box.append(b);
   });
   panel.append(box);
 }
-function feedback(st,ok,joke,wrong=0){
+function feedback(st,ok,joke,wrong=0,choice){
   const previous=run.answers[idx];
   if(ok){
     if(previous!=="first"&&previous!=="retried")run.answers[idx]=previous==="missed"?"retried":"first";
@@ -451,6 +452,17 @@ function feedback(st,ok,joke,wrong=0){
   mood(ok?1:2);
   const fb=el("div","fb "+(ok?"good":"bad"));
   fb.setAttribute("role","status");
+  if(!ok){
+    const correct=st.opts?.find(option=>option.ok);
+    const explanation=choice?.gr
+      ? `You said “${fill(choice.en)}”`
+      : st.t==="build"
+        ? `Aim for ${st.answer} · ${fill(st.learn[1])}`
+        : `It means “${fill(correct.en)}”`;
+    const meaning=el("p","answer-meaning");
+    meaning.textContent=explanation;
+    fb.append(meaning);
+  }
   fb.append(el("b",null,fill(ok?st.good||"Σωστά! — Correct!":joke||st.bad||{
     m:"Spyros studies the jumble of words. Dave’s ready to draw him a van.",
     f:"Spyros reaches for a pen. Sharon catches herself about to spell VAN in English."

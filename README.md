@@ -2,7 +2,7 @@
 
 *Learn Greek. Cause Chaos.* A Big Dave Gaming production.
 
-Dave and Sharon from Bootle are spending the summer in Sidari, Corfu. Their apartment is self-catering, which means they have to learn Greek to eat.
+Dave and Sharon from England are spending the summer in Sidari, Corfu. Their apartment is self-catering, which means they have to learn Greek to eat.
 
 Chapter 1 follows their arrival, the van hire, the apartment and their first trip to the mini-market. Pick a character, try the Greek, and learn from the fallout.
 
