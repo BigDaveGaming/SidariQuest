@@ -1,5 +1,7 @@
 # Sidari Quest — Chapter 1 Asset Status
 
+Baseline inventory before the mobile playtest. See the [current art audit and production list](CHAPTER1_ART_PRODUCTION.md) for integrated artwork and open files.
+
 **For the art AI (ChatGPT):** this file lists every Chapter 1 image, where it
 is, and what (if anything) needs fixing. Please analyse the files in
 `art/raw/`, fix or replace them as described, and deliver replacements as a

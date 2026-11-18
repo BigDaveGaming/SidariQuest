@@ -1,21 +1,14 @@
 # Big Dave & Gobby Sharon's Sidari Quest
 
-*Learn Greek. Cause Chaos.* — A Big Dave Gaming production.
+*Learn Greek. Cause Chaos.* A Big Dave Gaming production.
 
-An ad-free, offline phone game (PWA) that teaches practical everyday Greek.
-Big Dave and Gobby Sharon from Bootle are spending the summer in Sidari, Corfu,
-and their self-catering apartment means they have to learn Greek to eat.
+Dave and Sharon from Bootle are spending the summer in Sidari, Corfu. Their apartment is self-catering, which means they have to learn Greek to eat.
 
-## Status
+Chapter 1 follows their arrival, the van hire, the apartment and their first trip to the mini-market. Pick a character, try the Greek, and learn from the fallout.
 
-Rough build of Chapter 1, Lesson 1 (Spyros Rent-a-Van). Some art is still placeholder.
+- [Playtest and iPhone checklist](docs/PLAYTEST.md)
+- [Baseline technical audit](docs/CHAPTER1_AUDIT.md)
+- [Artwork review and production list](docs/CHAPTER1_ART_PRODUCTION.md)
+- [Original concept](docs/CONCEPT.txt) and [Chapter 1 art brief](docs/ART_BRIEF_CHAPTER1.txt)
 
-## Repo layout
-
-- `index.html`, `manifest.json`, `sw.js`, `icon-*.png` — the game (open `index.html`, or GitHub Pages)
-- `assets/` — game-ready art (`.webp`)
-- `art/raw/` — original art as delivered
-- `art/reference/` — approved style references
-- `docs/CONCEPT.txt` — full game concept
-- `docs/ART_BRIEF_CHAPTER1.txt` — art brief for Chapter 1
-- `docs/ASSET_STATUS.md` — what art is done, needs fixing, or is missing
+The browser game uses `index.html`, `chapter1.js`, `progress.js`, `manifest.json`, and `sw.js`. Runtime artwork lives in `assets/`. Original and reference PNGs live under `art/`.
