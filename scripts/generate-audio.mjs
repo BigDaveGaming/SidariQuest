@@ -34,8 +34,13 @@ const ROLE_WANTS = {
   "Spyros Rent-a-Van": {gender: "male", age: ["middle_aged", "young"], note: "40s, friendly but wary"},
   "Kyria Eleni": {gender: "female", age: ["old", "middle_aged"], note: "older woman, warm"},
   "Kyrios Spyros": {gender: "male", age: ["old", "middle_aged"], note: "older man, gruff"},
-  "Fat Spyros": {gender: "male", age: ["middle_aged", "old"], note: "cheerful, relaxed"}
+  "Fat Spyros": {gender: "male", age: ["middle_aged", "old"], note: "cheerful, relaxed"},
+  // Dave and Sharon: ordinary, down-to-earth British voices. Nothing posh. They also say
+  // their own Greek answers in the story in this voice (the 🔊 buttons stay proper Greek).
+  "Dave": {gender: "male", age: ["middle_aged", "old"], note: "ordinary British bloke, not posh", english: true},
+  "Sharon": {gender: "female", age: ["middle_aged", "young"], note: "ordinary British woman, not posh", english: true}
 };
+const PLAYER = {m: "Dave", f: "Sharon"};
 const NAMES = {m: "Ντέιβ", f: "Σάρον"};
 const GREEK = /[Ͱ-Ͽἀ-῿]/;
 
@@ -64,6 +69,7 @@ function loadChapter() {
   return sandbox.data;
 }
 
+// Keys: plain Greek text for the Greek voices; "Dave|text" / "Sharon|text" for their own voices.
 function collectLines() {
   const {steps, phrases, approach} = loadChapter();
   const lines = new Map();
@@ -72,7 +78,17 @@ function collectLines() {
       const key = normalise(text);
       if (!key || !GREEK.test(key)) continue;
       // A line a local actually says gets that local's voice.
-      if (!lines.has(key) || (lines.get(key) === "phrasebook" && role !== "phrasebook")) lines.set(key, role);
+      const current = lines.get(key);
+      if (!current || (current.role === "phrasebook" && role !== "phrasebook")) lines.set(key, {text: key, role});
+    }
+  };
+  // Something Dave or Sharon says out loud, in their own voice. c is "m" or "f".
+  const say = (value, c) => {
+    const who = PLAYER[c];
+    const forms = value && typeof value === "object" && "m" in value ? [value[c]] : [value];
+    for (const form of forms) {
+      const text = normalise(String(form || "").replaceAll("{PG}", NAMES[c]).replaceAll("{P}", who));
+      if (text) lines.set(`${who}|${text}`, {text, role: who});
     }
   };
   let scene = null;
@@ -80,16 +96,37 @@ function collectLines() {
     scene = step.scene || scene;
     const local = step.speaker || SCENE_LOCAL[scene] || "phrasebook";
     if (step.gr) add(step.gr, local);
-    for (const option of step.opts || []) if (option.gr) add(option.gr, "phrasebook");
+    for (const option of step.opts || []) {
+      if (option.gr) {
+        add(option.gr, "phrasebook");
+        for (const c of ["m", "f"]) say(option.gr, c);
+      }
+      for (const c of ["m", "f"]) {
+        for (const [character, line] of option.exchange?.[c] || []) {
+          const speakerKey = Object.keys(PLAYER).find(key => PLAYER[key] === character);
+          if (speakerKey) say(line, speakerKey);
+        }
+      }
+    }
     if (step.learn) add(step.learn[0], "phrasebook");
     if (step.answer) {
       add(step.answer, "phrasebook");
       for (const answer of variants(step.answer)) for (const word of String(answer).split(" ")) add(word, "phrasebook");
       for (const word of step.extra || []) add(word, "phrasebook");
+      for (const c of ["m", "f"]) say(step.answer, c);
+    }
+    if (step.t === "me" && step.text) for (const c of ["m", "f"]) say(step.text, c);
+    for (const [character, text] of step.lines || []) {
+      const c = Object.keys(PLAYER).find(key => PLAYER[key] === character);
+      if (c) say(text, c);
     }
   }
   for (const card of Object.values(phrases)) add(card.gr, "phrasebook");
-  for (const [, text] of approach) add(text, "phrasebook");
+  for (const [character, text] of approach) {
+    const c = Object.keys(PLAYER).find(key => PLAYER[key] === character);
+    if (c) say(text, c);
+    else add(text, "phrasebook");
+  }
   return lines;
 }
 
@@ -132,13 +169,21 @@ async function chooseVoices(roles) {
     const want = ROLE_WANTS[role] || ROLE_WANTS.phrasebook;
     const sameGender = voices.filter(voice => labels(voice).gender === want.gender);
     const candidates = sameGender.length ? sameGender : voices;
-    const score = voice => (greek(voice) ? 10 : 0) + (used.has(voice.voice_id) ? 0 : 3)
-      + (want.age.indexOf(labels(voice).age) === 0 ? 2 : want.age.includes(labels(voice).age) ? 1 : 0);
+    const about = voice => `${Object.values(labels(voice)).join(" ")} ${voice.name || ""} ${voice.description || ""}`;
+    const posh = voice => /posh|received pronunciation|\brp\b|refined|sophisticat|aristocrat|upper.class|classy|elegant|luxur|regal|proper/i.test(about(voice));
+    const british = voice => /british|english|northern|cockney|scouse|liverpool|manchester|yorkshire|geordie|midlands|essex|london|working.class|down.to.earth/i.test(about(voice));
+    const age = voice => want.age.indexOf(labels(voice).age) === 0 ? 2 : want.age.includes(labels(voice).age) ? 1 : 0;
+    const score = want.english
+      ? voice => (british(voice) ? 6 : 0) - (posh(voice) ? 8 : 0) - (greek(voice) ? 6 : 0)
+          - (/american|australian/i.test(about(voice)) ? 3 : 0) + (used.has(voice.voice_id) ? 0 : 3) + age(voice)
+      : voice => (greek(voice) ? 10 : 0) + (used.has(voice.voice_id) ? 0 : 3) + age(voice);
     const pick = [...candidates].sort((a, b) => score(b) - score(a))[0];
     if (!pick) throw new Error("No ElevenLabs voices available on this account.");
     used.add(pick.voice_id);
-    chosen[role] = {id: pick.voice_id, name: pick.name, why: want.note, labels: labels(pick), greek: greek(pick)};
-    console.log(`Voice for ${role}: ${pick.name} (${Object.values(labels(pick)).join(", ")})${greek(pick) ? " [Greek]" : " [not Greek: add Greek voices in ElevenLabs]"}`);
+    chosen[role] = {id: pick.voice_id, name: pick.name, why: want.note, labels: labels(pick), greek: want.english ? null : greek(pick)};
+    const tag = want.english ? (posh(pick) ? " [sounds posh: add a down-to-earth British voice]" : " [English]")
+      : greek(pick) ? " [Greek]" : " [not Greek: add Greek voices in ElevenLabs]";
+    console.log(`Voice for ${role}: ${pick.name} (${Object.values(labels(pick)).join(", ")})${tag}`);
   }
   return chosen;
 }
@@ -149,20 +194,20 @@ const fileFor = (text, voiceId) =>
 
 async function main() {
   const lines = collectLines();
-  const roles = [...new Set(lines.values())];
+  const roles = [...new Set([...lines.values()].map(line => line.role))];
   const voices = await chooseVoices(roles);
   const manifest = readJson(MANIFEST, {lines: {}});
   const old = manifest.lines || {};
 
   const todo = [];
   const kept = {};
-  for (const [text, role] of lines) {
+  for (const [key, {text, role}] of lines) {
     const voice = voices[role];
-    const existing = old[text];
+    const existing = old[key];
     const file = voice ? fileFor(text, voice.id) : existing?.file;
     const recorded = existing && existing.file === file && fs.existsSync(path.join(AUDIO, existing.file));
-    if (recorded && !REGENERATE.has(text)) kept[text] = existing;
-    else todo.push({text, role, voice, file});
+    if (recorded && !REGENERATE.has(text)) kept[key] = existing;
+    else todo.push({key, text, role, voice, file});
   }
 
   const notGreek = roles.filter(role => voices[role] && voices[role].greek === false);
@@ -176,7 +221,7 @@ async function main() {
   }
   const credits = todo.reduce((sum, line) => sum + line.text.length, 0);
   const summary = [
-    `Greek lines in the game: ${lines.size}`,
+    `Lines in the game: ${lines.size} (Greek voices ${[...lines.values()].filter(line => !PLAYER.m.includes(line.role) && line.role !== "Sharon").length}, Dave and Sharon ${[...lines.values()].filter(line => line.role === "Dave" || line.role === "Sharon").length})`,
     `Already recorded: ${Object.keys(kept).length}`,
     `To record: ${todo.length} (about ${credits} credits)`,
     `Budget for this run: ${BUDGET} credits`
@@ -203,7 +248,7 @@ async function main() {
           })
         });
         fs.writeFileSync(path.join(AUDIO, line.file), Buffer.from(await response.arrayBuffer()));
-        kept[line.text] = {file: line.file, role: line.role};
+        kept[line.key] = {file: line.file, role: line.role};
         spent += line.text.length;
         made++;
       } catch (error) {

@@ -357,10 +357,11 @@ button{font-family:inherit;cursor:pointer}
     <div class="row">Show Latin letters under Greek <button class="tog" id="tTr" aria-label="Show pronunciation"></button></div>
     <div class="row">Show English dialogue <button class="tog" id="tEnglish" aria-label="Show English dialogue"></button></div>
     <div class="row">Slow Greek audio <button class="tog" id="tSlow" aria-label="Slow Greek audio"></button></div>
+    <div class="row">Dave and Sharon's voices <button class="tog" id="tVoices" aria-label="Dave and Sharon's voices"></button></div>
     <div class="row">Change character <button class="btn small" id="bChange">Change</button></div>
     <div class="row">Erase both story saves and learning records <button class="btn small" id="bReset">Reset Progress</button></div>
     <p class="note" id="voiceNote"></p>
-    <p class="note">Greek voices by ElevenLabs.</p>
+    <p class="note">Voices by ElevenLabs.</p>
     <button class="btn next" id="bClose">Done</button>
   </div>
 </div>
@@ -437,8 +438,10 @@ function findVoice(){try{const v=speechSynthesis.getVoices();greekVoice=v.find(x
 // The phone's own Greek voice is the fallback for anything not recorded yet.
 let recordings={}, voiceAudio=null;
 const audioKey=text=>String(text||"").normalize("NFC").replace(/\s+/g," ").trim();
-function recordingFor(text){
+// who: "Dave" or "Sharon" for their own voice (English lines, and their Greek in the story).
+function recordingFor(text,who){
   const key=audioKey(text);
+  if(who)return recordings[`${who}|${key}`]||null;
   if(recordings[key])return recordings[key];
   // Signs are written in capitals; play the accented spelling's recording.
   const card=Object.values(typeof PHRASES==="object"?PHRASES:{}).find(card=>card.sign&&audioKey(card.sign)===key);
@@ -456,19 +459,42 @@ function syncAudioButton(button){
   button.disabled=!available;
 }
 try{findVoice();speechSynthesis.addEventListener("voiceschanged",()=>{findVoice();document.querySelectorAll(".say").forEach(syncAudioButton)})}catch(e){}
-function speak(t, slow=S.slow){
-  const recording=recordingFor(t);
+let lineQueue=[];
+function playRecording(text,slow=false,who){
+  const recording=recordingFor(text,who);
+  if(!recording)return false;
+  voiceAudio||=new Audio();
+  voiceAudio.onended=playNextLine;
+  voiceAudio.src="assets/audio/"+recording.file;
+  voiceAudio.preservesPitch=voiceAudio.webkitPreservesPitch=true;
+  voiceAudio.defaultPlaybackRate=voiceAudio.playbackRate=slow?0.7:1;
+  // iPhones only allow sound after a tap; if this one wasn't started by a tap, stay quiet.
+  voiceAudio.play().catch(()=>{});
+  return true;
+}
+function playNextLine(){
+  while(lineQueue.length){
+    const [text,who]=lineQueue.shift();
+    if(playRecording(text,false,who))return;
+  }
+}
+const audioBusy=()=>voiceAudio&&!voiceAudio.paused&&!voiceAudio.ended;
+// Dave or Sharon saying something in the story, in their own voice, after whatever is playing.
+function sayAs(who,text){
+  if(S.voices===false||!who)return false;
+  if(!recordingFor(text,who))return false;
+  lineQueue.push([text,who]);
+  if(!audioBusy())playNextLine();
+  return true;
+}
+function stopVoices(){
+  lineQueue=[];
   try{speechSynthesis.cancel()}catch{}
   if(voiceAudio)voiceAudio.pause();
-  if(recording){
-    voiceAudio||=new Audio();
-    voiceAudio.src="assets/audio/"+recording.file;
-    voiceAudio.preservesPitch=voiceAudio.webkitPreservesPitch=true;
-    voiceAudio.defaultPlaybackRate=voiceAudio.playbackRate=slow?0.7:1;
-    // iPhones only allow sound after a tap; if this one wasn't started by a tap, stay quiet.
-    voiceAudio.play().catch(()=>{});
-    return;
-  }
+}
+function speak(t, slow=S.slow){
+  stopVoices();
+  if(playRecording(t,slow))return;
   findVoice();
   if(!greekVoice) return;
   try{
@@ -603,6 +629,7 @@ function render(){
     localFigure.alt=speaker;
   }
   daveProp=st.prop||null;
+  stopVoices();
   panel.classList.remove("has-hint","has-new-hint","answered");
   react(null,st.kind==="meaning"?"confused":"neutral");
   updateTop();
@@ -613,6 +640,7 @@ function render(){
   if(st.t==="narr"||st.t==="me"){
     if(st.t==="me"){
       react("bump",st.reaction||"talking");
+      sayAs(NAME(),fill(st.text));
       const row=el("div","me-line");
       row.append(reactionFace(st.reaction||"talking"),el("div","line",fill(st.text)));
       panel.append(el("div","who me",NAME()),row);
@@ -656,7 +684,7 @@ function render(){
       for(const choice of box.children)choice.disabled=true;
       b.classList.add(o.ok?"right":"wrong");
       collapseAnswers(b);
-      if(gr)speak(gr);
+      if(gr){stopVoices();if(!sayAs(NAME(),gr))speak(gr)}
       const wrong=st.opts.filter(option=>!option.ok).indexOf(o);
       feedback(st,!!o.ok,st.badOptions?.[wrong],o,wrong);
     };
@@ -704,7 +732,10 @@ function feedback(st,ok,joke,choice,wrong=0){
     fb.append(el("p","answer-meaning",explanation));
     const exchange=choice?.exchange?.[S.c];
     if(exchange){
-      for(const [character,line] of exchange)fb.append(dialogueLine(character,line));
+      for(const [character,line] of exchange){
+        fb.append(dialogueLine(character,line));
+        if(character==="Dave"||character==="Sharon")sayAs(character,line);
+      }
     }else{
       if(speaker&&st.replies?.[wrong])fb.append(dialogueLine(speaker,st.replies[wrong]));
       fb.append(el("p","reaction-line",fill(joke||st.bad||{
@@ -757,6 +788,8 @@ function renderCutscene(st){
   if(character)copy.append(el("strong",null,character));
   if(greek)copy.append(greekBlock(text));
   else copy.append(el("div","line",text));
+  stopVoices();
+  if(character==="Dave"||character==="Sharon")sayAs(character,text);
   if(index===5)copy.append(el("p","note","Dave heard that in the pub. Speaking Greek doesn’t change the listed price."));
   line.append(copy);
   panel.append(line);
@@ -967,7 +1000,7 @@ function renderBuild(st){
     for(const tile of [...bank.children,...answer.children])tile.disabled=true;
     collapseAnswers(null);
     const ok=said===st.answer;
-    if(ok)speak(said);
+    if(ok){stopVoices();if(!sayAs(NAME(),said))speak(said)}
     feedback(st,ok);
   };
   controls.append(answer,bank,check);
@@ -1059,7 +1092,8 @@ $("#bGo").onclick=()=>{
   else startLesson();
 };
 $("#bQuit").onclick=()=>{try{speechSynthesis.cancel()}catch(e){}$("#lesson").classList.remove("on");show("title")};
-const toggles={tTr:"tr",tSlow:"slow",tEnglish:"english"};
+if(S.voices===undefined)S.voices=true;
+const toggles={tTr:"tr",tSlow:"slow",tEnglish:"english",tVoices:"voices"};
 function syncTogs(){
   Object.entries(toggles).forEach(([id,key])=>{
     const button=document.getElementById(id);
@@ -1068,7 +1102,7 @@ function syncTogs(){
     button.onclick=()=>{S[key]=!S[key];save();syncTogs()};
   });
 }
-$("#bSettings").onclick=()=>{findVoice();$("#voiceNote").textContent=Object.keys(recordings).length?`Recorded Greek: ${Object.keys(recordings).length} phrases ✓`:greekVoice?"Greek voice found ✓":"No Greek voice found on this device. On iPhone: Settings → Accessibility → Spoken Content → Voices → Greek.";syncTogs();$("#settings").classList.add("on")};
+$("#bSettings").onclick=()=>{findVoice();$("#voiceNote").textContent=Object.keys(recordings).length?`Recorded voices: ${Object.keys(recordings).length} lines ✓`:greekVoice?"Greek voice found ✓":"No Greek voice found on this device. On iPhone: Settings → Accessibility → Spoken Content → Voices → Greek.";syncTogs();$("#settings").classList.add("on")};
 $("#bClose").onclick=()=>$("#settings").classList.remove("on");
 $("#bChange").onclick=()=>{$("#settings").classList.remove("on");openSelect("change")};
 

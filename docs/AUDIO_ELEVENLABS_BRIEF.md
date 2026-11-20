@@ -112,3 +112,10 @@ The free plan requires crediting ElevenLabs when content is published. Add a sma
   phone voice. Recordings are cached for offline. Settings credits ElevenLabs.
 - The commit is made by the workflow bot, which doesn't trigger the playtest deploy.
   If the voices don't appear on the site, push any change to the branch to redeploy.
+- **Dave and Sharon have their own voices** (Mike, 20 Nov): ordinary, down-to-earth British
+  voices, never posh. They voice their English lines (plane chat, comments, chipping in on
+  wrong answers) **and say their own Greek answers in the story in their English accent**.
+  Every 🔊/🐢 button, phrasebook card and local's line stays in the proper Greek voice, so the
+  correct pronunciation is always one tap away. Recordings for them are keyed
+  `"Dave|text"` / `"Sharon|text"` in the manifest. Settings has a "Dave and Sharon's voices"
+  switch. Chapter 1: 165 lines, about 3,800 credits.
