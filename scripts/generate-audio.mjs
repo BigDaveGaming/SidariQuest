@@ -217,7 +217,11 @@ async function chooseVoices(roles) {
 
 // ---------- 3. Generate what's missing ----------
 const directions = readJson(DIRECTIONS, {roles: {}, lines: {}, sample: []});
-const directionFor = (key, role) => (directions.lines?.[key] ?? directions.roles?.[role] ?? "").trim();
+const directionFor = (key, role) => {
+  const base = (directions.lines?.[key] ?? directions.roles?.[role] ?? "").trim();
+  const accent = GREEK.test(key) ? directions.greekAccent?.[role] || "" : "";
+  return `${accent} ${base}`.trim();
+};
 // What ElevenLabs is sent: the direction tags, then the line. Only v3 understands tags.
 const spoken = line => MODEL === "eleven_v3" && line.direction ? `${line.direction} ${line.text}` : line.text;
 const fileFor = (text, voiceId, direction) =>

@@ -1,5 +1,5 @@
 {
-  "_about": "How each line should sound. Tags in [brackets] go to ElevenLabs v3 as acting directions and are never spoken. 'roles' is the default for everyone's lines; 'lines' overrides one line (same key as manifest.json). Change a direction and that line is re-recorded on the next run. 'sample' is the short list recorded by a sample run.",
+  "_about": "How each line should sound. Tags in [brackets] go to ElevenLabs v3 as acting directions and are never spoken. 'roles' is the default for everyone's lines; 'lines' overrides one line (same key as manifest.json). Change a direction and that line is re-recorded on the next run. 'sample' is the short list recorded by a sample run. 'greekAccent' is added in front of that character's Greek lines, to stop the voice slipping into a Greek accent.",
   "roles": {
     "Dave": "[cheerfully]",
     "Sharon": "[confidently]",
@@ -27,7 +27,6 @@
     "Dave|See? We'll never starve.": "[smug]",
     "Dave|Anyway, I've sorted us out. Three hundred quid a week, Shaz. All-inclusive. For the whole summer. I've still got it.": "[smug]",
     "Sharon|You'd better have, Dave.": "[warning]",
-
     "Dave|ALRIGHT MATE! I… WANT… A… VAN!": "[shouts] [slowly]",
     "Sharon|HIYA, LUV! WE… WANT… A… VAN!": "[shouts] [slowly]",
     "Sharon|He's trying to hire a van, not feed you, luv.": "[exasperated]",
@@ -46,7 +45,6 @@
     "Sharon|Και το πρωινό;": "[hopeful]",
     "Dave|Ένα ποτήρι κρασί, παρακαλώ.": "[hopeful]",
     "Sharon|Ένα ποτήρι κρασί, παρακαλώ.": "[hopeful]",
-
     "Καλημέρα.": "[tired] [politely]",
     "Έχετε κάνει κράτηση;": "[politely]",
     "Για πόσες μέρες;": "[businesslike]",
@@ -76,5 +74,8 @@
     "Sharon|Και το βραδινό;",
     "Προσέξτε το βαν, σας παρακαλώ!",
     "Έχει κουζίνα!"
-  ]
+  ],
+  "greekAccent": {
+    "Sharon": "[Cockney accent]"
+  }
 }
