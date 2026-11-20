@@ -150,20 +150,37 @@ async function api(pathname, options = {}) {
 async function chooseVoices(roles) {
   const chosen = readJson(VOICES, {});
   // Roles without a voice, or stuck with an English one, get (re)chosen.
-  const missing = roles.filter(role => !chosen[role]?.id
+  const pinned = roles.filter(role => chosen[role]?.name && !chosen[role]?.id);
+  const missing = roles.filter(role => !pinned.includes(role)) .filter(role => !chosen[role]?.id
     || (chosen[role].greek === false && process.env.ALLOW_NON_GREEK !== "true"));
-  if (!missing.length) return chosen;
+  if (!missing.length && !pinned.length) return chosen;
   if (!KEY) {
     console.log(`No API key, so voices for ${missing.join(", ")} can't be chosen yet.`);
     return chosen;
   }
   const {voices} = await (await api("/voices")).json();
+  // A voice named in voices.json without an id is pinned to that role by name.
+  for (const role of pinned) {
+    const match = voices.find(voice => voice.name.toLowerCase().startsWith(chosen[role].name.toLowerCase()));
+    if (!match) throw new Error(`voices.json names "${chosen[role].name}" for ${role}, but that voice isn't in My Voices.`);
+    const english = (ROLE_WANTS[role] || {}).english;
+    chosen[role] = {id: match.voice_id, name: match.name, labels: match.labels || {}, pinned: true,
+      greek: english ? null : (match.labels?.language === "el" || /greek/i.test(`${match.labels?.accent || ""} ${match.name}`))};
+    console.log(`Voice for ${role}: ${match.name} (picked by name)`);
+  }
   const used = new Set(roles.filter(role => !missing.includes(role)).map(role => chosen[role].id));
   const labels = voice => voice.labels || {};
   // A native Greek voice matters most: an English voice reads Greek with an accent.
-  const greek = voice => /greek|ελλην/i.test(`${labels(voice).accent || ""} ${labels(voice).language || ""} ${voice.name || ""} ${voice.description || ""}`)
-    || labels(voice).language === "el"
-    || (voice.verified_languages || []).some(language => language.language === "el" && language.accent && !/standard|american|british/i.test(language.accent));
+  // Only a voice that is itself Greek counts. (Many English voices list Greek as a language
+  // they *can* speak, which isn't the same as sounding Greek.)
+  const greek = voice => labels(voice).language === "el"
+    || /greek|ελλην/i.test(`${labels(voice).accent || ""} ${voice.name || ""} ${voice.description || ""}`);
+  // Voices Mike added himself beat ElevenLabs' built-in ones.
+  const added = voice => voice.category && voice.category !== "premade";
+  console.log("Voices on the account:");
+  for (const voice of voices) {
+    console.log(`  - ${voice.name} [${voice.category || "?"}] ${Object.values(labels(voice)).join(", ")}${greek(voice) ? " (Greek)" : ""}`);
+  }
   // Locals first, so the phrasebook doesn't take the only Greek voice of a gender.
   for (const role of [...missing].sort((a, b) => (a === "phrasebook") - (b === "phrasebook"))) {
     const want = ROLE_WANTS[role] || ROLE_WANTS.phrasebook;
@@ -174,9 +191,9 @@ async function chooseVoices(roles) {
     const british = voice => /british|english|northern|cockney|scouse|liverpool|manchester|yorkshire|geordie|midlands|essex|london|working.class|down.to.earth/i.test(about(voice));
     const age = voice => want.age.indexOf(labels(voice).age) === 0 ? 2 : want.age.includes(labels(voice).age) ? 1 : 0;
     const score = want.english
-      ? voice => (british(voice) ? 6 : 0) - (posh(voice) ? 8 : 0) - (greek(voice) ? 6 : 0)
+      ? voice => (added(voice) ? 7 : 0) + (british(voice) ? 6 : 0) - (posh(voice) ? 8 : 0) - (greek(voice) ? 6 : 0)
           - (/american|australian/i.test(about(voice)) ? 3 : 0) + (used.has(voice.voice_id) ? 0 : 3) + age(voice)
-      : voice => (greek(voice) ? 10 : 0) + (used.has(voice.voice_id) ? 0 : 3) + age(voice);
+      : voice => (greek(voice) ? 10 : 0) + (added(voice) && greek(voice) ? 2 : 0) + (used.has(voice.voice_id) ? 0 : 3) + age(voice);
     const pick = [...candidates].sort((a, b) => score(b) - score(a))[0];
     if (!pick) throw new Error("No ElevenLabs voices available on this account.");
     used.add(pick.voice_id);
