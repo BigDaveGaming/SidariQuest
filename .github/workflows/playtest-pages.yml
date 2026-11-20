@@ -22,8 +22,8 @@ jobs:
           mkdir _site
           cp index.html chapter1.js progress.js manifest.json sw.js icon-*.png _site/
           cp -R assets _site/
-          sed -i "s/playtest-v8/playtest-${GITHUB_SHA}/" _site/sw.js
-      - uses: actions/upload-pages-artifact@v3
+          sed -i -E "s/playtest-v[0-9]+/playtest-${GITHUB_SHA}/" _site/sw.js && grep -q "playtest-${GITHUB_SHA}" _site/sw.js
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
       - uses: actions/deploy-pages@v4
