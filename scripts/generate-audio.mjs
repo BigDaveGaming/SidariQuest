@@ -112,30 +112,33 @@ async function api(pathname, options = {}) {
 
 async function chooseVoices(roles) {
   const chosen = readJson(VOICES, {});
-  const missing = roles.filter(role => !chosen[role]?.id);
+  // Roles without a voice, or stuck with an English one, get (re)chosen.
+  const missing = roles.filter(role => !chosen[role]?.id
+    || (chosen[role].greek === false && process.env.ALLOW_NON_GREEK !== "true"));
   if (!missing.length) return chosen;
   if (!KEY) {
     console.log(`No API key, so voices for ${missing.join(", ")} can't be chosen yet.`);
     return chosen;
   }
   const {voices} = await (await api("/voices")).json();
-  const used = new Set(Object.values(chosen).map(voice => voice.id));
-  const pool = voices.filter(voice => !used.has(voice.voice_id));
-  for (const role of missing) {
+  const used = new Set(roles.filter(role => !missing.includes(role)).map(role => chosen[role].id));
+  const labels = voice => voice.labels || {};
+  // A native Greek voice matters most: an English voice reads Greek with an accent.
+  const greek = voice => /greek|ελλην/i.test(`${labels(voice).accent || ""} ${labels(voice).language || ""} ${voice.name || ""} ${voice.description || ""}`)
+    || labels(voice).language === "el"
+    || (voice.verified_languages || []).some(language => language.language === "el" && language.accent && !/standard|american|british/i.test(language.accent));
+  // Locals first, so the phrasebook doesn't take the only Greek voice of a gender.
+  for (const role of [...missing].sort((a, b) => (a === "phrasebook") - (b === "phrasebook"))) {
     const want = ROLE_WANTS[role] || ROLE_WANTS.phrasebook;
-    const labels = voice => voice.labels || {};
-    const score = voice => (labels(voice).gender === want.gender ? 4 : 0)
-      + (want.age.indexOf(labels(voice).age) === 0 ? 2 : want.age.includes(labels(voice).age) ? 1 : 0)
-      + (voice.category === "premade" ? 1 : 0);
-    const pick = [...pool].sort((a, b) => score(b) - score(a))[0] || voices[0];
+    const sameGender = voices.filter(voice => labels(voice).gender === want.gender);
+    const candidates = sameGender.length ? sameGender : voices;
+    const score = voice => (greek(voice) ? 10 : 0) + (used.has(voice.voice_id) ? 0 : 3)
+      + (want.age.indexOf(labels(voice).age) === 0 ? 2 : want.age.includes(labels(voice).age) ? 1 : 0);
+    const pick = [...candidates].sort((a, b) => score(b) - score(a))[0];
     if (!pick) throw new Error("No ElevenLabs voices available on this account.");
-    pool.splice(pool.indexOf(pick), 1);
-    chosen[role] = {id: pick.voice_id, name: pick.name, why: want.note, labels: labels(pick)};
-    console.log(`Voice for ${role}: ${pick.name} (${Object.values(labels(pick)).join(", ")})`);
-  }
-  if (!DRY_RUN) {
-    fs.mkdirSync(AUDIO, {recursive: true});
-    fs.writeFileSync(VOICES, JSON.stringify(chosen, null, 2) + "\n");
+    used.add(pick.voice_id);
+    chosen[role] = {id: pick.voice_id, name: pick.name, why: want.note, labels: labels(pick), greek: greek(pick)};
+    console.log(`Voice for ${role}: ${pick.name} (${Object.values(labels(pick)).join(", ")})${greek(pick) ? " [Greek]" : " [not Greek: add Greek voices in ElevenLabs]"}`);
   }
   return chosen;
 }
@@ -162,6 +165,15 @@ async function main() {
     else todo.push({text, role, voice, file});
   }
 
+  const notGreek = roles.filter(role => voices[role] && voices[role].greek === false);
+  if (!DRY_RUN && notGreek.length && process.env.ALLOW_NON_GREEK !== "true") {
+    throw new Error(`Not recording: ${notGreek.join(", ")} would get an English voice. ` +
+      "Add Greek voices to My Voices in ElevenLabs and run again, or tick \"Allow non-Greek voices\".");
+  }
+  if (!DRY_RUN) {
+    fs.mkdirSync(AUDIO, {recursive: true});
+    fs.writeFileSync(VOICES, JSON.stringify(voices, null, 2) + "\n");
+  }
   const credits = todo.reduce((sum, line) => sum + line.text.length, 0);
   const summary = [
     `Greek lines in the game: ${lines.size}`,

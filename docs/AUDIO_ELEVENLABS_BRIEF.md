@@ -102,7 +102,10 @@ The free plan requires crediting ElevenLabs when content is published. Add a sma
 - `.github/workflows/generate-audio.yml`: **Actions → Generate Greek audio → Run workflow**.
   "Practice run" ticked = list + credits only. Unticked = record and commit to the branch.
   The workflow file is also on `main` so the Run button appears.
-- Voices are chosen automatically from the account's voices by gender/age labels per
+- Voices are chosen automatically from the account's voices: same gender first, then native
+  Greek voices (an English voice reads Greek with an accent), then age. A real run refuses
+  to record if any role would get a non-Greek voice unless "Allow non-Greek voices" is ticked.
+  Chosen per
   role and saved in `assets/audio/voices.json`. To change one, edit its `id` there,
   then run again with the affected lines in "Lines to record again".
 - Game: `speak()` plays the recording (slow = 0.7× with pitch kept), falls back to the

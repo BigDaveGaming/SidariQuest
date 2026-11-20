@@ -13,6 +13,10 @@ on:
         type: string
         required: false
         default: ""
+      allow_non_greek:
+        description: "Allow non-Greek voices (they read Greek with an accent)"
+        type: boolean
+        default: false
       branch:
         description: "Branch with the game"
         type: string
@@ -37,6 +41,7 @@ jobs:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           DRY_RUN: ${{ inputs.dry_run }}
           REGENERATE: ${{ inputs.regenerate }}
+          ALLOW_NON_GREEK: ${{ inputs.allow_non_greek }}
         run: node scripts/generate-audio.mjs
       - name: Save them to the repo
         if: ${{ !inputs.dry_run }}
