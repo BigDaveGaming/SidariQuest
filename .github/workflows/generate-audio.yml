@@ -8,6 +8,10 @@ on:
         description: "Practice run: list the lines and credits, spend nothing"
         type: boolean
         default: true
+      sample:
+        description: "Sample only: record the short list in directions.json to assets/audio/samples (game unchanged)"
+        type: boolean
+        default: false
       regenerate:
         description: "Lines to record again (exact Greek, one per line)"
         type: string
@@ -42,6 +46,7 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run }}
           REGENERATE: ${{ inputs.regenerate }}
           ALLOW_NON_GREEK: ${{ inputs.allow_non_greek }}
+          SAMPLE: ${{ inputs.sample }}
         run: node scripts/generate-audio.mjs
       - name: Save them to the repo
         if: ${{ !inputs.dry_run }}
@@ -51,5 +56,5 @@ jobs:
           git add -A assets/audio
           if git diff --cached --quiet; then echo "No new recordings."; exit 0; fi
           count=$(git diff --cached --name-only --diff-filter=A -- 'assets/audio/*.mp3' | wc -l)
-          git commit -m "Add Greek audio ($count new recordings)"
+          if [ "${{ inputs.sample }}" = "true" ]; then git commit -m "Add voice samples"; else git commit -m "Add Greek audio ($count new recordings)"; fi
           git push origin HEAD:${{ inputs.branch }}

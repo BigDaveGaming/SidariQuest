@@ -3,6 +3,7 @@
 // Run by .github/workflows/generate-audio.yml ("Generate Greek audio" in the Actions tab).
 //
 //   DRY_RUN=true     list the lines and the credits they'd use, spend nothing (default)
+//   SAMPLE=true      record only the 'sample' list in directions.json, to assets/audio/samples
 //   REGENERATE=...   exact Greek lines (one per line) to record again
 //   ELEVENLABS_API_KEY  from the repo secret. Never printed.
 //
@@ -18,7 +19,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const AUDIO = path.join(ROOT, "assets", "audio");
 const MANIFEST = path.join(AUDIO, "manifest.json");
 const VOICES = path.join(AUDIO, "voices.json");
-const MODEL = "eleven_multilingual_v2";
+// v3 takes acting directions like [annoyed] or [laughs] (see assets/audio/directions.json).
+const MODEL = process.env.MODEL || "eleven_v3";
+const DIRECTIONS = path.join(AUDIO, "directions.json");
+const SAMPLES = path.join(AUDIO, "samples");
+// SAMPLE=true records only the "sample" list into assets/audio/samples, for a listen before the full run.
+const SAMPLE = process.env.SAMPLE === "true";
 const FORMAT = "mp3_22050_32";
 const BUDGET = Number(process.env.BUDGET || 7500);
 const DRY_RUN = process.env.DRY_RUN !== "false";
@@ -115,7 +121,11 @@ function collectLines() {
       for (const word of step.extra || []) add(word, "phrasebook");
       for (const c of ["m", "f"]) say(step.answer, c);
     }
-    if (step.t === "me" && step.text) for (const c of ["m", "f"]) say(step.text, c);
+    // Skip "me" text that is narration with quotes in it: one voice can't read both parts.
+    if (step.t === "me" && step.text) for (const c of ["m", "f"]) {
+      const form = typeof step.text === "object" ? step.text[c] : step.text;
+      if (!/[“”]/.test(form || "")) say(form, c);
+    }
     for (const [character, text] of step.lines || []) {
       const c = Object.keys(PLAYER).find(key => PLAYER[key] === character);
       if (c) say(text, c);
@@ -206,8 +216,13 @@ async function chooseVoices(roles) {
 }
 
 // ---------- 3. Generate what's missing ----------
-const fileFor = (text, voiceId) =>
-  crypto.createHash("sha1").update(`${text}|${voiceId}|${MODEL}`).digest("hex").slice(0, 12) + ".mp3";
+const directions = readJson(DIRECTIONS, {roles: {}, lines: {}, sample: []});
+const directionFor = (key, role) => (directions.lines?.[key] ?? directions.roles?.[role] ?? "").trim();
+// What ElevenLabs is sent: the direction tags, then the line. Only v3 understands tags.
+const spoken = line => MODEL === "eleven_v3" && line.direction ? `${line.direction} ${line.text}` : line.text;
+const fileFor = (text, voiceId, direction) =>
+  crypto.createHash("sha1").update(`${text}|${voiceId}|${MODEL}|${direction}`).digest("hex").slice(0, 12) + ".mp3";
+const slug = text => text.normalize("NFD").replace(/\p{M}/gu, "").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 40).toLowerCase();
 
 async function main() {
   const lines = collectLines();
@@ -218,13 +233,23 @@ async function main() {
 
   const todo = [];
   const kept = {};
+  const sampleKeys = new Set(directions.sample || []);
+  if (SAMPLE) for (const key of sampleKeys) if (!lines.has(key)) console.log(`Sample line not in the game (skipped): ${key}`);
+  let n = 0;
   for (const [key, {text, role}] of lines) {
+    if (SAMPLE && !sampleKeys.has(key)) continue;
     const voice = voices[role];
+    const direction = directionFor(key, role);
+    if (SAMPLE) {
+      n++;
+      todo.push({key, text, role, voice, direction, file: `samples/${String(n).padStart(2, "0")}-${role.toLowerCase().replace(/\W+/g, "-")}-${slug(text)}.mp3`});
+      continue;
+    }
     const existing = old[key];
-    const file = voice ? fileFor(text, voice.id) : existing?.file;
+    const file = voice ? fileFor(text, voice.id, direction) : existing?.file;
     const recorded = existing && existing.file === file && fs.existsSync(path.join(AUDIO, existing.file));
     if (recorded && !REGENERATE.has(text)) kept[key] = existing;
-    else todo.push({key, text, role, voice, file});
+    else todo.push({key, text, role, voice, direction, file});
   }
 
   const notGreek = roles.filter(role => voices[role] && voices[role].greek === false);
@@ -232,46 +257,63 @@ async function main() {
     throw new Error(`Not recording: ${notGreek.join(", ")} would get an English voice. ` +
       "Add Greek voices to My Voices in ElevenLabs and run again, or tick \"Allow non-Greek voices\".");
   }
-  if (!DRY_RUN) {
+  if (!DRY_RUN && !SAMPLE) {
     fs.mkdirSync(AUDIO, {recursive: true});
     fs.writeFileSync(VOICES, JSON.stringify(voices, null, 2) + "\n");
   }
-  const credits = todo.reduce((sum, line) => sum + line.text.length, 0);
+  const credits = todo.reduce((sum, line) => sum + spoken(line).length, 0);
   const summary = [
     `Lines in the game: ${lines.size} (Greek voices ${[...lines.values()].filter(line => !PLAYER.m.includes(line.role) && line.role !== "Sharon").length}, Dave and Sharon ${[...lines.values()].filter(line => line.role === "Dave" || line.role === "Sharon").length})`,
+    `Model: ${MODEL}${SAMPLE ? " (sample run: only the sample lines, the game isn't changed)" : ""}`,
     `Already recorded: ${Object.keys(kept).length}`,
     `To record: ${todo.length} (about ${credits} credits)`,
     `Budget for this run: ${BUDGET} credits`
   ];
   console.log(summary.join("\n"));
-  for (const line of todo) console.log(`  [${line.role}] ${line.text}`);
+  for (const line of todo) console.log(`  [${line.role}] ${spoken(line)}`);
 
   let spent = 0, made = 0;
   const skipped = [], failed = [];
   if (!DRY_RUN) {
     if (!KEY) throw new Error("ELEVENLABS_API_KEY is not set. Add it under Settings → Secrets and variables → Actions.");
     fs.mkdirSync(AUDIO, {recursive: true});
+    if (SAMPLE) {
+      fs.rmSync(SAMPLES, {recursive: true, force: true});
+      fs.mkdirSync(SAMPLES, {recursive: true});
+    }
     for (const line of todo) {
       if (!line.voice) { failed.push(`${line.text} (no voice)`); continue; }
-      if (spent + line.text.length > BUDGET) { skipped.push(line.text); continue; }
+      const text = spoken(line);
+      if (spent + text.length > BUDGET) { skipped.push(line.text); continue; }
       try {
         const response = await api(`/text-to-speech/${line.voice.id}?output_format=${FORMAT}`, {
           method: "POST",
           headers: {"Content-Type": "application/json", "Accept": "audio/mpeg"},
           body: JSON.stringify({
-            text: line.text,
+            text,
             model_id: MODEL,
-            voice_settings: {stability: 0.55, similarity_boost: 0.75}
+            // v3 only accepts 0 (creative), 0.5 (natural) or 1 (robust).
+            voice_settings: MODEL === "eleven_v3" ? {stability: 0.5} : {stability: 0.55, similarity_boost: 0.75}
           })
         });
         fs.writeFileSync(path.join(AUDIO, line.file), Buffer.from(await response.arrayBuffer()));
-        kept[line.key] = {file: line.file, role: line.role};
-        spent += line.text.length;
+        if (!SAMPLE) kept[line.key] = {file: line.file, role: line.role};
+        spent += text.length;
         made++;
       } catch (error) {
         failed.push(`${line.text}: ${error.message}`);
       }
     }
+  }
+  if (!DRY_RUN && SAMPLE) {
+    const list = todo.filter(line => fs.existsSync(path.join(AUDIO, line.file)))
+      .map(line => `<li><b>${line.role}</b> ${line.direction ? `<i>${line.direction}</i> ` : ""}${line.text}<br>` +
+        `<audio controls preload="none" src="${line.file.replace("samples/", "")}"></audio></li>`);
+    fs.writeFileSync(path.join(SAMPLES, "index.html"), `<!doctype html><meta charset="utf-8">` +
+      `<meta name="viewport" content="width=device-width,initial-scale=1"><title>Voice samples</title>` +
+      `<body style="font:16px system-ui;margin:16px"><h1>Voice samples (${MODEL})</h1><ol>${list.join("")}</ol>`);
+  }
+  if (!DRY_RUN && !SAMPLE) {
     // Keep only lines the game still uses, and remove recordings nothing points to.
     const sorted = Object.fromEntries(Object.entries(kept).sort(([a], [b]) => a.localeCompare(b, "el")));
     fs.writeFileSync(MANIFEST, JSON.stringify({
@@ -287,6 +329,8 @@ async function main() {
 
   const result = DRY_RUN
     ? ["**Practice run: nothing was sent to ElevenLabs.** Run again with the practice box unticked to record."]
+    : SAMPLE ? [`Recorded ${made} sample lines, about ${spent} credits. They're in assets/audio/samples; the game is unchanged.`,
+       failed.length ? `Failed ${failed.length}:\n${failed.map(line => `- ${line}`).join("\n")}` : ""]
     : [`Recorded ${made} lines, about ${spent} credits.`,
        skipped.length ? `Skipped ${skipped.length} to stay within the budget. Run again to record them.` : "",
        failed.length ? `Failed ${failed.length}:\n${failed.map(line => `- ${line}`).join("\n")}` : ""];
