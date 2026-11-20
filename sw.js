@@ -1,7 +1,7 @@
 importScripts("assets/chapter1-art.js");
 
 const PREFIX = "sidari-quest-";
-const CACHE = PREFIX + "playtest-v9";
+const CACHE = PREFIX + "playtest-v10";
 const SHELL = [
   "./", "index.html", "manifest.json", "chapter1.js", "progress.js",
   "icon-180.png", "icon-192.png", "icon-512.png", "assets/chapter1-art.js"
@@ -9,12 +9,26 @@ const SHELL = [
 const art = [...new Set(["title_bg", "tagline", "logo", ...GAME_ART])]
   .map(name => "assets/" + name + ".webp");
 
+// Recorded Greek, listed in assets/audio/manifest.json (may not exist yet).
+const recordingPaths = async cache => {
+  try {
+    const manifest = new URL("assets/audio/manifest.json", self.registration.scope);
+    const response = await fetch(manifest, {cache: "reload"});
+    if (!response.ok) return [];
+    await cache.put(manifest, response.clone());
+    const {lines = {}} = await response.json();
+    return [...new Set(Object.values(lines).map(line => "assets/audio/" + line.file))];
+  } catch { return []; }
+};
+
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache =>
-    cache.addAll([...SHELL, ...art].map(path => new Request(
+  event.waitUntil(caches.open(CACHE).then(async cache => {
+    await cache.addAll([...SHELL, ...art].map(path => new Request(
       new URL(path, self.registration.scope), {cache: "reload"}
-    )))
-  ).then(() => self.skipWaiting()));
+    )));
+    // Recordings are a bonus: one failing shouldn't stop the game installing.
+    await Promise.all((await recordingPaths(cache)).map(path => cache.add(new URL(path, self.registration.scope)).catch(() => {})));
+  }).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", event => {
@@ -49,6 +63,11 @@ self.addEventListener("fetch", event => {
         return (await cache.match(isHome ? home : request)) || Response.error();
       }
     }
-    return (await cache.match(request)) || fetch(request);
+    const saved = await cache.match(request);
+    if (saved) return saved;
+    const fresh = await fetch(request);
+    // New art or recordings get saved the first time they're used, so they work offline after.
+    if (fresh.ok && /\.(webp|png|mp3)$/.test(url.pathname)) cache.put(request, fresh.clone());
+    return fresh;
   }));
 });

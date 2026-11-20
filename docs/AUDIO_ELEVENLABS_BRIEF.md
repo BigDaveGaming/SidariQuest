@@ -90,3 +90,22 @@ The free plan requires crediting ElevenLabs when content is published. Add a sma
 - 🔊 and 🐢 play the recordings on iPhone Safari, and work offline after the first load.
 - Lines without a recording still speak using the phone voice.
 - Chosen voices are documented here.
+
+---
+
+## Built (Claude, 20 Nov 2026)
+
+- `scripts/generate-audio.mjs`: collects every Greek line from `chapter1.js` (both
+  characters, both gender forms, tile words, cards), picks voices, records only what's
+  missing, writes `assets/audio/*.mp3` + `manifest.json` + `voices.json`. 67 lines,
+  ~1,160 credits for Chapter 1. Model `eleven_multilingual_v2`, `mp3_22050_32`.
+- `.github/workflows/generate-audio.yml`: **Actions → Generate Greek audio → Run workflow**.
+  "Practice run" ticked = list + credits only. Unticked = record and commit to the branch.
+  The workflow file is also on `main` so the Run button appears.
+- Voices are chosen automatically from the account's voices by gender/age labels per
+  role and saved in `assets/audio/voices.json`. To change one, edit its `id` there,
+  then run again with the affected lines in "Lines to record again".
+- Game: `speak()` plays the recording (slow = 0.7× with pitch kept), falls back to the
+  phone voice. Recordings are cached for offline. Settings credits ElevenLabs.
+- The commit is made by the workflow bot, which doesn't trigger the playtest deploy.
+  If the voices don't appear on the site, push any change to the branch to redeploy.

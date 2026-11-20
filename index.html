@@ -360,6 +360,7 @@ button{font-family:inherit;cursor:pointer}
     <div class="row">Change character <button class="btn small" id="bChange">Change</button></div>
     <div class="row">Erase both story saves and learning records <button class="btn small" id="bReset">Reset Progress</button></div>
     <p class="note" id="voiceNote"></p>
+    <p class="note">Greek voices by ElevenLabs.</p>
     <button class="btn next" id="bClose">Done</button>
   </div>
 </div>
@@ -432,18 +433,45 @@ function translit(str){
 /* ---------- speech ---------- */
 let greekVoice=null;
 function findVoice(){try{const v=speechSynthesis.getVoices();greekVoice=v.find(x=>/^el(?:-|$)/i.test(x.lang))||null}catch{}}
+// Recorded Greek (ElevenLabs, made by the "Generate Greek audio" workflow) plays first.
+// The phone's own Greek voice is the fallback for anything not recorded yet.
+let recordings={}, voiceAudio=null;
+const audioKey=text=>String(text||"").normalize("NFC").replace(/\s+/g," ").trim();
+function recordingFor(text){
+  const key=audioKey(text);
+  if(recordings[key])return recordings[key];
+  // Signs are written in capitals; play the accented spelling's recording.
+  const card=Object.values(typeof PHRASES==="object"?PHRASES:{}).find(card=>card.sign&&audioKey(card.sign)===key);
+  return card?recordings[audioKey(card.gr)]:null;
+}
+fetch("assets/audio/manifest.json",{cache:"no-cache"})
+  .then(response=>response.ok?response.json():{})
+  .then(manifest=>{recordings=manifest.lines||{};document.querySelectorAll(".say").forEach(syncAudioButton)})
+  .catch(()=>{});
 function syncAudioButton(button){
-  const label=greekVoice ? "Hear Greek" : "Greek voice unavailable";
+  const available=!!greekVoice||!!(button.dataset.greek&&recordingFor(button.dataset.greek));
+  const label=available ? "Hear Greek" : "Greek voice unavailable";
   button.setAttribute("aria-label",label);
   button.title=label;
-  button.disabled=!greekVoice;
+  button.disabled=!available;
 }
 try{findVoice();speechSynthesis.addEventListener("voiceschanged",()=>{findVoice();document.querySelectorAll(".say").forEach(syncAudioButton)})}catch(e){}
 function speak(t, slow=S.slow){
+  const recording=recordingFor(t);
+  try{speechSynthesis.cancel()}catch{}
+  if(voiceAudio)voiceAudio.pause();
+  if(recording){
+    voiceAudio||=new Audio();
+    voiceAudio.src="assets/audio/"+recording.file;
+    voiceAudio.preservesPitch=voiceAudio.webkitPreservesPitch=true;
+    voiceAudio.defaultPlaybackRate=voiceAudio.playbackRate=slow?0.7:1;
+    // iPhones only allow sound after a tap; if this one wasn't started by a tap, stay quiet.
+    voiceAudio.play().catch(()=>{});
+    return;
+  }
   findVoice();
   if(!greekVoice) return;
   try{
-    speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(t);
     u.lang="el-GR";u.voice=greekVoice;
     u.rate=slow?0.65:0.9;speechSynthesis.speak(u);
@@ -452,6 +480,7 @@ function speak(t, slow=S.slow){
 function audioButton(gr){
   findVoice();
   const b=el("button","say","🔊");
+  b.dataset.greek=gr;
   syncAudioButton(b);
   b.onclick=()=>speak(gr);
   return b;
@@ -1039,7 +1068,7 @@ function syncTogs(){
     button.onclick=()=>{S[key]=!S[key];save();syncTogs()};
   });
 }
-$("#bSettings").onclick=()=>{findVoice();$("#voiceNote").textContent=greekVoice?"Greek voice found ✓":"No Greek voice found on this device. On iPhone: Settings → Accessibility → Spoken Content → Voices → Greek.";syncTogs();$("#settings").classList.add("on")};
+$("#bSettings").onclick=()=>{findVoice();$("#voiceNote").textContent=Object.keys(recordings).length?`Recorded Greek: ${Object.keys(recordings).length} phrases ✓`:greekVoice?"Greek voice found ✓":"No Greek voice found on this device. On iPhone: Settings → Accessibility → Spoken Content → Voices → Greek.";syncTogs();$("#settings").classList.add("on")};
 $("#bClose").onclick=()=>$("#settings").classList.remove("on");
 $("#bChange").onclick=()=>{$("#settings").classList.remove("on");openSelect("change")};
 
