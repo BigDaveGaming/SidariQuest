@@ -301,6 +301,11 @@ async function main() {
         spent += text.length;
         made++;
       } catch (error) {
+        // The free plan can't use voices from the Voice Library over the API: no point trying the rest.
+        if (/paid_plan_required/.test(error.message)) {
+          throw new Error("ElevenLabs says these voices need a paid plan: free accounts can't use Voice Library voices " +
+            "through the API. Nothing was recorded and no credits were used.");
+        }
         failed.push(`${line.text}: ${error.message}`);
       }
     }
