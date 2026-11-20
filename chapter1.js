@@ -192,6 +192,14 @@ const LOCAL_REPLIES = {
   "legacy-32":["It's ten past eleven.","Yes. Would you like to know the price first?"]
 };
 
+// Hand-written wrong answers for cards whose story step has no options.
+const CHECK_DISTRACTORS = {
+  van: ["I'd like a car", "I've got a van"],
+  kitchen: ["There's no kitchen!", "There's a restaurant!"],
+  // The story's other "ready" option means the same thing in the other gender form.
+  ready: ["I'm tired!", "Are you ready?"]
+};
+
 const PHRASES = {};
 const STORY_STEPS = CHAPTER.steps.flatMap(step => {
   step.replies ||= LOCAL_REPLIES[step.id];
@@ -203,7 +211,9 @@ const STORY_STEPS = CHAPTER.steps.flatMap(step => {
       gr: original.sign ? original.learn[0] : original.gr || original.answer || correct?.gr,
       sign: original.sign,
       en: original.en || correct?.en || original.learn[1],
-      words: gloss.split("|"), tip: tip || original.why
+      words: gloss.split("|"), tip: tip || original.why,
+      // Quick checks reuse the wrong answers written for that moment in the story.
+      distractors: CHECK_DISTRACTORS[id] || (original.opts || []).filter(option => !option.ok).map(option => option.en)
     };
     PHRASES[id] = card;
     original.phrase = id;

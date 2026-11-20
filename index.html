@@ -842,13 +842,13 @@ function runChecks(cards,done,number=0){
     head.append(greekBlock(greek),el("div","prompt","What does this mean?"));
   }
   panel.append(head);
-  const others=shuffle(Object.values(PHRASES).filter(other=>fill(other.en)!==english)).slice(0,2);
+  const wrongAnswers=(card.distractors||[]).map(fill).filter(text=>text!==english).slice(0,2);
   const box=el("div","opts");
-  for(const option of shuffle([card,...others])){
-    const button=el("button","opt",fill(option.en));
+  for(const label of shuffle([english,...wrongAnswers])){
+    const button=el("button","opt",label);
     button.onclick=()=>{
       for(const choice of box.children)choice.disabled=true;
-      const ok=option===card;
+      const ok=label===english;
       button.classList.add(ok?"right":"wrong");
       if(!ok)[...box.children].find(choice=>choice.textContent===english)?.classList.add("right");
       const fb=el("div","fb "+(ok?"good":"bad"));
