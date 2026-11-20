@@ -73,35 +73,50 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
     taught = set()
     locals_seen = set()
     for step in page.evaluate("steps.slice(1)"):
-        assert page.evaluate("run.step") == step["id"]
         kind = step["t"]
+        if kind == "teach" and page.evaluate("run.step") != step["id"]:
+            # Phrases learned on an earlier play skip their card and live behind 📖.
+            assert page.evaluate("(id) => isKnown(id)", step["phrase"])
+            taught.add(step["phrase"])
+            continue
+        assert page.evaluate("run.step") == step["id"]
         if page.locator("#cast").is_visible():
-            body = page.locator("#daveBody")
+            body = page.locator("#player")
+            assert page.locator("#playerActor img").count() == 1
             if character == "m":
                 expected = "assets/dave_full.webp" if step.get("prop") == "magnet" else "assets/dave_full_no_magnet.webp"
                 assert body.get_attribute("src") == expected
-                page.wait_for_function("document.querySelector('#daveBody').naturalWidth > 0")
-            else:
-                assert body.is_hidden()
+            page.wait_for_function("document.querySelector('#player').naturalWidth > 0")
             local = page.locator("#localFigure").get_attribute("alt")
             if local not in locals_seen:
                 page.wait_for_function("document.querySelector('#localFigure').naturalWidth > 0")
                 locals_seen.add(local)
         if kind == "teach":
-            assert panel.get_by_text("Greek for Beginners", exact=True).is_visible()
+            assert panel.locator(".pb-front .pb-head").is_visible()
+            assert panel.get_by_role("button", name="Got it").is_hidden()
+            panel.locator(".pb").tap()
+            page.wait_for_timeout(600)
+            assert panel.locator(".pb.flipped").count() == 1
             if step["phrase"] == "van" and explore:
-                panel.locator(".word-chips .tile").first.tap()
-                assert panel.locator(".gloss").inner_text() == "would"
-            option(panel, answer_text(step["en"], character)).tap()
+                assert panel.locator(".pb-words dd").first.inner_text() == "would"
+            panel.get_by_role("button", name="Got it").tap()
             taught.add(step["phrase"])
+            while panel.locator(".q-head .who").filter(has_text="Quick check").count():
+                greek = panel.locator(".q-head .g").first.inner_text()
+                english = page.evaluate(
+                    "(gr) => fill(Object.values(PHRASES).find(card => fill(card.gr) === gr).en)", greek)
+                option(panel, english).tap()
+                assert panel.locator(".fb.good").is_visible()
+                panel.locator(".next").tap()
             continue
         if kind == "challenge":
             assert panel.get_by_role("heading", name="Greek challenge").is_visible()
             assert {step["phrase"], *step["alternatives"]} <= taught
             card = page.evaluate("(id) => PHRASES[id]", step["phrase"])
             if help_on_challenge and step["phrase"] == "handover":
-                panel.get_by_text("📖 Phrasebook hint", exact=True).tap()
-                assert panel.locator(".hint").get_attribute("open") is not None
+                panel.locator(".hint-btn").tap()
+                assert page.locator("#hintSheet.on .pb").is_visible()
+                page.locator("#bHintClose").tap()
                 distractor = page.evaluate("(id) => PHRASES[id]", step["alternatives"][0])
                 option(panel, answer_text(distractor["en"], character)).tap()
             else:
@@ -120,7 +135,8 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
                 option(panel, "Καλή όρεξη!").tap()
                 if character == "m":
                     assert body.get_attribute("src") == "assets/dave_full_no_magnet.webp"
-                    assert page.locator("#player").get_attribute("src") == "assets/dave_full_cringe.webp"
+                assert panel.locator(".fb .react-face img").get_attribute("src") == (
+                    "assets/dave_cringe.webp" if character == "m" else "assets/sharon_cringe.webp")
                 assert panel.get_by_text("YOU SAID: Enjoy your meal!", exact=True).is_visible()
                 assert panel.locator(".said-greek").inner_text() == "Καλή όρεξη!"
                 assert [x.split(" ", 1)[0] for x in panel.locator(".reaction-line").all_inner_texts()] == (

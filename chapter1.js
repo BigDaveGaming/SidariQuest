@@ -200,7 +200,8 @@ const STORY_STEPS = CHAPTER.steps.flatMap(step => {
     const correct = original.opts?.find(option => option.ok);
     const card = {
       id: "teach-" + id, phrase: id, t: "teach",
-      gr: original.gr || original.sign || original.answer || correct?.gr,
+      gr: original.sign ? original.learn[0] : original.gr || original.answer || correct?.gr,
+      sign: original.sign,
       en: original.en || correct?.en || original.learn[1],
       words: gloss.split("|"), tip: tip || original.why
     };

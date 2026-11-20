@@ -108,3 +108,18 @@ The renamed moods are fine. Final file names:
 - ✅ 4 done · 🔧 27 to fix · ❌ 9 missing (40 total)
 - Priority: 1) locals (E), 2) backgrounds (F), 3) Sharon's faces (D), 4) Dave's faces (C),
   5) intro (G), 6) extras (H).
+
+
+## Round 3 (Claude, Nov 2026): Dave's expressions
+
+Dave's full-body expression sprites (`dave_full_<expression>`) were separate generations,
+so the body, tattoos and pose differ in each and they hold the Union Jack magnet. The old
+head-mask composite caused a doubled/ghosted Dave and has been removed.
+
+Now: Dave's full body is always one complete image (`dave_full` at the magnet beat,
+`dave_full_no_magnet` everywhere else). His reactions show as head-and-shoulders
+portraits (`dave_<normal|proud|confused|cringe|fuming|shocked|talking>`) in the dialogue panel.
+
+**Art wanted (optional, for full-body reactions):** matching no-magnet expression sprites,
+generated from `dave_full_no_magnet` so the body, tattoos and framing are identical:
+`dave_full_<pleased|cringe|confused|shocked|talking|fuming>_no_magnet`.
