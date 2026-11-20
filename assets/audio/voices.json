@@ -1,4 +1,8 @@
 {
-  "Dave": {"name": "John North"},
-  "Sharon": {"name": "Lizzie - Cockney"}
+  "Dave": {
+    "name": "Matthew Paul"
+  },
+  "Sharon": {
+    "name": "Lizzie - Cockney"
+  }
 }

@@ -12,6 +12,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import {execFileSync} from "node:child_process";
 import crypto from "node:crypto";
 import {fileURLToPath} from "node:url";
 
@@ -25,6 +26,8 @@ const DIRECTIONS = path.join(AUDIO, "directions.json");
 const SAMPLES = path.join(AUDIO, "samples");
 // SAMPLE=true records only the "sample" list into assets/audio/samples, for a listen before the full run.
 const SAMPLE = process.env.SAMPLE === "true";
+// SAMPLE_ROLES=Dave limits a sample run to those characters.
+const SAMPLE_ROLES = new Set((process.env.SAMPLE_ROLES || "").split(",").map(role => role.trim()).filter(Boolean));
 const FORMAT = "mp3_22050_32";
 const BUDGET = Number(process.env.BUDGET || 7500);
 const DRY_RUN = process.env.DRY_RUN !== "false";
@@ -224,8 +227,18 @@ const directionFor = (key, role) => {
 };
 // What ElevenLabs is sent: the direction tags, then the line. Only v3 understands tags.
 const spoken = line => MODEL === "eleven_v3" && line.direction ? `${line.direction} ${line.text}` : line.text;
-const fileFor = (text, voiceId, direction) =>
-  crypto.createHash("sha1").update(`${text}|${voiceId}|${MODEL}|${direction}`).digest("hex").slice(0, 12) + ".mp3";
+// Shift a recording by some semitones with ffmpeg (deeper and bigger when negative). Length stays the same.
+const pitchFor = role => Number(directions.pitch?.[role] || 0);
+function shiftPitch(file, semitones, out = file) {
+  const ratio = Math.pow(2, semitones / 12);
+  const temp = out + ".tmp.mp3";
+  execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-af",
+    `asetrate=22050*${ratio.toFixed(5)},aresample=22050,atempo=${(1 / ratio).toFixed(5)}`,
+    "-ac", "1", "-b:a", "32k", temp]);
+  fs.renameSync(temp, out);
+}
+const fileFor = (text, voiceId, direction, pitch = 0) =>
+  crypto.createHash("sha1").update(`${text}|${voiceId}|${MODEL}|${direction}${pitch ? `|${pitch}` : ""}`).digest("hex").slice(0, 12) + ".mp3";
 const slug = text => text.normalize("NFD").replace(/\p{M}/gu, "").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 40).toLowerCase();
 
 async function main() {
@@ -241,7 +254,7 @@ async function main() {
   if (SAMPLE) for (const key of sampleKeys) if (!lines.has(key)) console.log(`Sample line not in the game (skipped): ${key}`);
   let n = 0;
   for (const [key, {text, role}] of lines) {
-    if (SAMPLE && !sampleKeys.has(key)) continue;
+    if (SAMPLE && (!sampleKeys.has(key) || (SAMPLE_ROLES.size && !SAMPLE_ROLES.has(role)))) continue;
     const voice = voices[role];
     const direction = directionFor(key, role);
     if (SAMPLE) {
@@ -250,7 +263,7 @@ async function main() {
       continue;
     }
     const existing = old[key];
-    const file = voice ? fileFor(text, voice.id, direction) : existing?.file;
+    const file = voice ? fileFor(text, voice.id, direction, pitchFor(role)) : existing?.file;
     const recorded = existing && existing.file === file && fs.existsSync(path.join(AUDIO, existing.file));
     if (recorded && !REGENERATE.has(text)) kept[key] = existing;
     else todo.push({key, text, role, voice, direction, file});
@@ -300,7 +313,14 @@ async function main() {
             voice_settings: MODEL === "eleven_v3" ? {stability: 0.5} : {stability: 0.55, similarity_boost: 0.75}
           })
         });
-        fs.writeFileSync(path.join(AUDIO, line.file), Buffer.from(await response.arrayBuffer()));
+        const saved = path.join(AUDIO, line.file);
+        fs.writeFileSync(saved, Buffer.from(await response.arrayBuffer()));
+        const pitch = pitchFor(line.role);
+        if (pitch) {
+          // A sample keeps the untouched recording too, to compare.
+          if (SAMPLE) fs.copyFileSync(saved, saved.replace(/\.mp3$/, "-original.mp3"));
+          shiftPitch(saved, pitch);
+        }
         if (!SAMPLE) kept[line.key] = {file: line.file, role: line.role};
         spent += text.length;
         made++;
@@ -317,7 +337,8 @@ async function main() {
   if (!DRY_RUN && SAMPLE) {
     const list = todo.filter(line => fs.existsSync(path.join(AUDIO, line.file)))
       .map(line => `<li><b>${line.role}</b> ${line.direction ? `<i>${line.direction}</i> ` : ""}${line.text}<br>` +
-        `<audio controls preload="none" src="${line.file.replace("samples/", "")}"></audio></li>`);
+        `<audio controls preload="none" src="${line.file.replace("samples/", "")}"></audio>` +
+        (pitchFor(line.role) ? `<br>original: <audio controls preload="none" src="${line.file.replace("samples/", "").replace(/\.mp3$/, "-original.mp3")}"></audio>` : "") + `</li>`);
     fs.writeFileSync(path.join(SAMPLES, "index.html"), `<!doctype html><meta charset="utf-8">` +
       `<meta name="viewport" content="width=device-width,initial-scale=1"><title>Voice samples</title>` +
       `<body style="font:16px system-ui;margin:16px"><h1>Voice samples (${MODEL})</h1><ol>${list.join("")}</ol>`);

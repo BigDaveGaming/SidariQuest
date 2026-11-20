@@ -12,6 +12,10 @@ on:
         description: "Sample only: record the short list in directions.json to assets/audio/samples (game unchanged)"
         type: boolean
         default: false
+      sample_roles:
+        description: "Sample only these characters (comma separated, blank for all)"
+        type: string
+        default: ""
       regenerate:
         description: "Lines to record again (exact Greek, one per line)"
         type: string
@@ -40,6 +44,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Check ffmpeg
+        run: command -v ffmpeg || (sudo apt-get update -q && sudo apt-get install -y -q ffmpeg)
       - name: Make the recordings
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
@@ -47,6 +53,7 @@ jobs:
           REGENERATE: ${{ inputs.regenerate }}
           ALLOW_NON_GREEK: ${{ inputs.allow_non_greek }}
           SAMPLE: ${{ inputs.sample }}
+          SAMPLE_ROLES: ${{ inputs.sample_roles }}
         run: node scripts/generate-audio.mjs
       - name: Save them to the repo
         if: ${{ !inputs.dry_run }}

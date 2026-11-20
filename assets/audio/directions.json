@@ -1,7 +1,7 @@
 {
-  "_about": "How each line should sound. Tags in [brackets] go to ElevenLabs v3 as acting directions and are never spoken. 'roles' is the default for everyone's lines; 'lines' overrides one line (same key as manifest.json). Change a direction and that line is re-recorded on the next run. 'sample' is the short list recorded by a sample run. 'greekAccent' is added in front of that character's Greek lines, to stop the voice slipping into a Greek accent.",
+  "_about": "How each line should sound. Tags in [brackets] go to ElevenLabs v3 as acting directions and are never spoken. 'roles' is the default for everyone's lines; 'lines' overrides one line (same key as manifest.json). Change a direction and that line is re-recorded on the next run. 'sample' is the short list recorded by a sample run. 'greekAccent' is added in front of that character's Greek lines, to stop the voice slipping into a Greek accent. 'pitch' lowers (or raises) a character's recordings by that many semitones afterwards, e.g. to make a voice sound older and bigger.",
   "roles": {
-    "Dave": "[cheerfully]",
+    "Dave": "[gruff] [cheerfully]",
     "Sharon": "[confidently]",
     "Spyros Rent-a-Van": "[politely]",
     "Kyria Eleni": "[warmly]",
@@ -77,5 +77,8 @@
   ],
   "greekAccent": {
     "Sharon": "[Cockney accent]"
+  },
+  "pitch": {
+    "Dave": -2
   }
 }
