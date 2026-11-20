@@ -82,6 +82,7 @@ button{font-family:inherit;cursor:pointer}
 .opt.right{border-color:var(--good);background:#e5f6e9;box-shadow:0 3px 0 var(--good)}
 .opt.wrong{border-color:var(--bad);background:#fbe6e6;box-shadow:0 3px 0 var(--bad)}
 .opt:disabled{cursor:default}
+.panel [hidden]{display:none!important}
 .fb{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.4}
 .fb.good{background:#e5f6e9;border:2px solid var(--good)}
 .fb.bad{background:#fbe6e6;border:2px solid var(--bad)}
@@ -210,6 +211,8 @@ button{font-family:inherit;cursor:pointer}
 
 .panel{max-height:68%;flex-shrink:0;overscroll-behavior:contain;scroll-padding:8px}
 .scene:has(.cast:not([hidden])) + .panel{flex-basis:clamp(232px,39%,355px)}
+/* Once you've answered, the panel grows to fit the result so nothing needs scrolling. */
+.panel.answered,.scene:has(.cast:not([hidden])) + .panel.answered{flex-basis:auto;max-height:82%}
 .opt,.btn,.tile,.say,.lr .say,.tog,.x,.reveal{min-height:44px}
 .say,.lr .say,.x{min-width:44px}
 .say:disabled{opacity:.45}
@@ -233,6 +236,7 @@ button{font-family:inherit;cursor:pointer}
 .fb::after{content:"";display:block;clear:both}
 /* ---------- question header stays in view ---------- */
 .q-head{position:sticky;top:-12px;z-index:2;background:var(--paper);margin:-12px 0 0;padding:12px 0 4px}
+@media (max-height:600px){.q-head{position:static;margin:0;padding:0 0 4px}}
 .panel.has-hint .q-head,.panel.has-hint>.prompt{padding-right:54px}
 .hint-btn{position:absolute;top:10px;right:max(12px,env(safe-area-inset-right));z-index:3;width:46px;height:46px;border-radius:50%;border:3px solid var(--deep);background:#fff3d7;font-size:21px;box-shadow:0 3px 0 var(--deep);padding:0}
 .hint-btn:active{transform:translateY(2px);box-shadow:none}
@@ -570,7 +574,7 @@ function render(){
     localFigure.alt=speaker;
   }
   daveProp=st.prop||null;
-  panel.classList.remove("has-hint","has-new-hint");
+  panel.classList.remove("has-hint","has-new-hint","answered");
   react(null,st.kind==="meaning"?"confused":"neutral");
   updateTop();
   panel.replaceChildren();
@@ -622,6 +626,7 @@ function render(){
     b.onclick=()=>{
       for(const choice of box.children)choice.disabled=true;
       b.classList.add(o.ok?"right":"wrong");
+      collapseAnswers(b);
       if(gr)speak(gr);
       const wrong=st.opts.filter(option=>!option.ok).indexOf(o);
       feedback(st,!!o.ok,st.badOptions?.[wrong],o,wrong);
@@ -629,6 +634,17 @@ function render(){
     box.append(b);
   });
   panel.append(box);
+}
+// After an answer, keep only what you picked, the result and the next button, so nothing needs scrolling.
+function collapseAnswers(chosen){
+  for(const option of panel.querySelectorAll(".opt"))if(option!==chosen)option.hidden=true;
+  for(const extra of panel.querySelectorAll(".tiles,.hint-btn,.drag-hint"))extra.hidden=true;
+  panel.classList.remove("has-new-hint");
+  panel.classList.add("answered");
+}
+function showResult(){
+  panel.scrollTop=0;
+  requestAnimationFrame(()=>panel.lastElementChild?.scrollIntoView({block:"nearest"}));
 }
 function feedback(st,ok,joke,choice,wrong=0){
   const previous=run.answers[st.id];
@@ -683,7 +699,7 @@ function feedback(st,ok,joke,choice,wrong=0){
     retry.onclick=()=>{render();panel.querySelector("button")?.focus({preventScroll:true})};
     panel.append(retry);
   }
-  fb.scrollIntoView({block:"nearest"});
+  showResult();
 }
 function dialogueLine(character,text){
   const line=el("p","reaction-line");
@@ -818,6 +834,8 @@ function renderChallenge(st){
     if(st.recall)button.lang="el";
     button.onclick=()=>{
       for(const option of choiceBox.children)option.disabled=true;
+      button.classList.add(key===st.phrase?"right":"wrong");
+      collapseAnswers(button);
       result.correct=key===st.phrase;
       result.answered=true;
       run.challenge[st.id]=result;save();
@@ -832,7 +850,7 @@ function challengeFeedback(card,result){
   const feedback=el("p",result.correct?"fb good":"fb bad");
   feedback.textContent=`${result.correct?"Correct.":"The answer is"} ${fill(card.gr)} · ${fill(card.en)}`;
   panel.append(feedback,nextBtn(idx===steps.length-1?"See my stars":"Next question"));
-  feedback.scrollIntoView({block:"nearest"});
+  showResult();
 }
 
 function renderBuild(st){
@@ -918,6 +936,7 @@ function renderBuild(st){
     const said=Array.from(answer.children,b=>b.textContent).join(" ");
     check.remove();
     for(const tile of [...bank.children,...answer.children])tile.disabled=true;
+    collapseAnswers(null);
     const ok=said===st.answer;
     if(ok)speak(said);
     feedback(st,ok);
