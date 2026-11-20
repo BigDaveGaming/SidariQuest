@@ -16,7 +16,7 @@ LOCALS = {
     "kyrios_spyros": ("normal", "stern", "explaining"),
     "fat_spyros": ("normal", "laughing", "fed_up"),
 }
-REACTIONS = ("pleased", "cringe", "confused", "shocked", "talking")
+REACTIONS = ("pleased", "cringe", "confused", "shocked", "talking", "fuming")
 EXPRESSIONS = ("normal", "proud", "confused", "cringe", "fuming", "shocked", "talking")
 available = []
 

@@ -18,151 +18,239 @@ class Handler(SimpleHTTPRequestHandler):
         pass
 
 
-def play(page, character, retry=False, resume=False):
+def answer_text(value, character):
+    if isinstance(value, dict):
+        value = value[character]
+    return value.replace("{PG}", "Σάρον" if character == "f" else "Ντέιβ").replace(
+        "{P}", "Sharon" if character == "f" else "Dave"
+    )
+
+
+def option(panel, label):
+    return panel.locator(".opt").filter(has_text=label).first
+
+
+def drag(page, origin, target, edge=0.5, touch=None):
+    origin.scroll_into_view_if_needed()
+    start = origin.bounding_box()
+    end = target.bounding_box()
+    assert start and end
+    x1, y1 = start["x"] + start["width"] / 2, start["y"] + start["height"] / 2
+    x2, y2 = end["x"] + end["width"] * edge, end["y"] + end["height"] / 2
+    if touch:
+        touch.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x1, "y": y1}]})
+        for frame in range(1, 9):
+            touch.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [
+                {"x": x1 + (x2 - x1) * frame / 8, "y": y1 + (y2 - y1) * frame / 8}
+            ]})
+        touch.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+    else:
+        page.mouse.move(x1, y1)
+        page.mouse.down()
+        page.mouse.move(x2, y2, steps=8)
+        page.mouse.up()
+
+
+def play(page, character, *, explore=False, help_on_challenge=False, replay=False, touch=None):
     page.locator("#bPlay").click()
     if page.locator("#select").is_visible():
-        page.locator(f'.card[data-c="{character}"]').click()
-        page.locator("#bGo").click()
-    player = page.locator("#player")
-    sprite = "assets/sharon_full" if character == "f" else "assets/dave_full"
-    tested_retry = False
-    seen_locals = set()
-    if retry:
-        assert page.evaluate("CHAPTER.steps.every(step => step.opts?.every(option => option.en) ?? true)")
-    for position, step in enumerate(page.evaluate("CHAPTER.steps")):
-        panel = page.locator("#panel")
-        if step.get("wide"):
-            assert page.locator("#cast").is_hidden()
+        page.locator(f'.card[data-c="{character}"]').tap()
+        page.locator("#bGo").tap()
+    panel = page.locator("#panel")
+    assert panel.get_by_text("Final Approach", exact=True).is_visible()
+    if replay:
+        panel.get_by_role("button", name="Skip prologue").tap()
+    else:
+        assert panel.get_by_role("button", name="Skip prologue").is_hidden()
+        lines = page.evaluate("FINAL_APPROACH")
+        for i, (_, line, *_) in enumerate(lines):
+            assert panel.get_by_text(line, exact=True).is_visible()
+            if i == 3 and explore:
+                page.reload()
+                page.get_by_role("button", name="Continue Adventure").tap()
+                assert panel.get_by_text(line, exact=True).is_visible()
+            panel.get_by_role("button", name="Next line" if i < len(lines) - 1 else "Continue", exact=True).tap()
+    taught = set()
+    locals_seen = set()
+    for step in page.evaluate("steps.slice(1)"):
+        assert page.evaluate("run.step") == step["id"]
+        kind = step["t"]
         if page.locator("#cast").is_visible():
             local = page.locator("#localFigure").get_attribute("alt")
-            if local not in seen_locals:
-                seen_locals.add(local)
-                assert page.locator("#player").get_attribute("src") == (
-                    "assets/sharon_full.webp" if character == "f" else "assets/dave_full.webp"
-                )
-                for actor in ("#player", "#localFigure"):
-                    image = page.locator(actor)
-                    page.wait_for_function(
-                        "selector => { const img = document.querySelector(selector); return img.complete && img.naturalWidth > 0 }",
-                        arg=actor,
-                    )
-                    assert image.evaluate("img => img.naturalHeight > img.naturalWidth")
-                    stage = page.locator("#scene").bounding_box()
-                    bounds = image.bounding_box()
-                    assert stage and bounds
-                    assert stage["y"] <= bounds["y"] and bounds["height"] > 0
-                    assert bounds["y"] + bounds["height"] > stage["y"] + stage["height"]
-                    assert bounds["y"] + 45 < stage["y"] + stage["height"]
-
-        if step["t"] == "me":
-            assert player.get_attribute("src") == sprite + "_talking.webp"
-        if step["t"] == "q":
-            correct = next(o for o in step["opts"] if o.get("ok"))
-            if retry and not tested_retry and step.get("kind") == "reply":
-                responses = []
-                for wrong, option in enumerate(o for o in step["opts"] if not o.get("ok")):
-                    label = option.get("gr", option.get("en"))
-                    panel.locator(".opt").filter(has_text=label).click()
-                    reaction = "confused" if wrong == 1 else "cringe"
-                    assert player.get_attribute("src") == f"{sprite}_{reaction}.webp"
-                    responses.append(panel.locator(".fb.bad b").inner_text())
-                    meaning = panel.locator(".fb.bad .answer-meaning").inner_text()
-                    assert meaning == f'You just said “{option["en"]}”'
-                    assert not panel.get_by_role("button", name="Continue").count()
-                    panel.get_by_role("button", name="Try again").click()
-                    assert player.get_attribute("src") == sprite + ".webp"
-                assert len(set(responses)) == 2
-                if resume:
-                    page.reload()
-                    page.get_by_role("button", name="Continue Adventure").click()
-                    assert page.evaluate("run.idx") == position
-                    assert page.evaluate("run.answers[run.idx]") == "missed"
-                tested_retry = True
-            label = correct.get("gr", correct.get("en"))
-            if isinstance(label, dict):
-                label = label[character]
-            label = label.replace("{PG}", "Σάρον" if character == "f" else "Ντέιβ")
-            panel.locator(".opt").filter(has_text=label).click()
-            assert panel.locator(".fb.good").is_visible()
-            reaction = step.get("reaction", "pleased")
-            assert player.get_attribute("src") == f"{sprite}_{reaction}.webp"
-            if resume and position == 4:
+            if local not in locals_seen:
+                page.wait_for_function("document.querySelector('#localFigure').naturalWidth > 0")
+                locals_seen.add(local)
+        if kind == "teach":
+            assert panel.get_by_text("Greek for Beginners", exact=True).is_visible()
+            if step["phrase"] == "van" and explore:
+                panel.locator(".word-chips .tile").first.tap()
+                assert panel.locator(".gloss").inner_text() == "would"
+            option(panel, answer_text(step["en"], character)).tap()
+            taught.add(step["phrase"])
+            continue
+        if kind == "challenge":
+            assert panel.get_by_role("heading", name="Greek challenge").is_visible()
+            assert {step["phrase"], *step["alternatives"]} <= taught
+            card = page.evaluate("(id) => PHRASES[id]", step["phrase"])
+            if help_on_challenge and step["phrase"] == "handover":
+                panel.get_by_text("📖 Phrasebook hint", exact=True).tap()
+                assert panel.locator(".hint").get_attribute("open") is not None
+                distractor = page.evaluate("(id) => PHRASES[id]", step["alternatives"][0])
+                option(panel, answer_text(distractor["en"], character)).tap()
+            else:
+                label = answer_text(card["gr" if step.get("recall") else "en"], character)
+                option(panel, label).tap()
+            if step["phrase"] == "handover" and explore and not help_on_challenge:
                 page.reload()
-                page.get_by_role("button", name="Continue Adventure").click()
-                assert panel.locator(".fb.good").is_visible()
-                assert not panel.locator(".opt").count()
-        if step["t"] == "build":
-            if retry:
-                panel.locator(".tiles .tile", has_text="αυτοκίνητο").click()
-                panel.get_by_role("button", name="Check").click()
-                assert panel.locator(".fb.bad").is_visible()
-                panel.get_by_role("button", name="Try again").click()
-            for word in step["answer"].split():
-                panel.locator(".tiles .tile").get_by_text(word, exact=True).click()
-            panel.get_by_role("button", name="Check").click()
+                page.get_by_role("button", name="Continue Adventure").tap()
+                assert page.evaluate("run.challenge['challenge-handover'].correct")
+            panel.locator(".next").tap()
+            continue
+        if kind in {"q", "build"}:
+            assert step["phrase"] in taught
+        if kind == "q":
+            if explore and step["phrase"] == "morning":
+                option(panel, "Καλή όρεξη!").tap()
+                assert panel.get_by_text("YOU SAID: Enjoy your meal!", exact=True).is_visible()
+                assert panel.locator(".said-greek").inner_text() == "Καλή όρεξη!"
+                assert [x.split(" ", 1)[0] for x in panel.locator(".reaction-line").all_inner_texts()] == (
+                    ["Spyros", "Dave", "Sharon"] if character == "f" else ["Spyros", "Sharon", "Dave"]
+                )
+                expected = (
+                    ["He's got a point, Shaz. Unless the clipboard's edible.", "Oh, shut up, Dave. I'm learning."]
+                    if character == "f" else
+                    ["He's trying to hire a van, not feed you, luv.", "Just being polite, weren't I?"]
+                )
+                for line in ["Thank you. But I am not eating.", *expected]:
+                    assert panel.get_by_text(line, exact=False).count()
+                assert not panel.get_by_role("button", name="Continue", exact=True).count()
+                panel.get_by_role("button", name="Have another go", exact=True).tap()
+                option(panel, "Καληνύχτα!").tap()
+                assert panel.get_by_text("Good night? I've only just opened.", exact=False).count()
+                panel.get_by_role("button", name="Have another go", exact=True).tap()
+            correct = next(o for o in step["opts"] if o.get("ok"))
+            option(panel, answer_text(correct.get("gr", correct["en"]), character)).tap()
             assert panel.locator(".fb.good").is_visible()
-        panel.get_by_role("button", name="Continue").click()
+        elif kind == "build":
+            words = step["answer"].split()
+            bank, row = panel.locator(".tiles"), panel.locator(".answer")
+            if explore:
+                # Move from bank, reorder within the answer and return a word to the bank.
+                drag(page, bank.get_by_text(words[1], exact=True), row, .12, touch)
+                assert row.locator(".tile").all_inner_texts() == [words[1]]
+                bank.get_by_text(words[0], exact=True).tap()
+                drag(page, row.get_by_text(words[0], exact=True), row.get_by_text(words[1], exact=True), .18, touch)
+                assert row.locator(".tile").all_inner_texts() == words[:2]
+                drag(page, row.get_by_text(words[1], exact=True), bank, touch=touch)
+                assert row.locator(".tile").all_inner_texts() == [words[0]]
+                words = words[1:]
+            for word in words:
+                bank.get_by_text(word, exact=True).tap()
+            panel.get_by_role("button", name="Check", exact=True).tap()
+            assert panel.locator(".fb.good").is_visible()
+        panel.get_by_role("button", name="Continue", exact=True).tap()
+    assert locals_seen == {"Spyros Rent-a-Van", "Kyria Eleni", "Kyrios Spyros", "Fat Spyros"}
     assert page.get_by_role("heading", name="Chapter 1 complete").is_visible()
-    assert seen_locals == {"Spyros Rent-a-Van", "Kyria Eleni", "Kyrios Spyros", "Fat Spyros"}
 
 
 def check(browser_type, base, server, executable=None):
     browser = browser_type.launch(executable_path=executable)
-    mobile = {"viewport": {"width": 390, "height": 844}, "has_touch": True}
-    ctx = browser.new_context(**mobile)
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
     page = ctx.new_page()
-    failures = []
-    page.on("pageerror", lambda error: failures.append(str(error)))
-    page.on("response", lambda response: failures.append(response.url) if response.status >= 400 else None)
+    page.set_default_timeout(9000)
+    errors = []
+    page.on("pageerror", lambda error: errors.append(str(error)))
+    page.on("response", lambda response: errors.append(response.url) if response.status >= 400 else None)
     page.goto(base)
     page.evaluate("navigator.serviceWorker.ready")
     page.wait_for_function("navigator.serviceWorker.controller")
-    assets = page.evaluate("""async () => {
-      const manifest = await (await fetch('manifest.json')).json();
-      return await Promise.all(manifest.icons.map(async icon => {
-        const image = new Image();
-        image.src = icon.src;
-        await image.decode();
-        return icon.sizes === image.naturalWidth + 'x' + image.naturalHeight;
-      }));
+    legacy = {
+        "c": "m", "tr": False, "english": True, "slow": True, "figs": 12,
+        "completedLessons": ["chapter1"], "phrases": {"Καλημέρα": "Good morning"},
+        "runs": {"chapter1-m": {"idx": 7, "answers": {"4": "first"}}, "chapter1-f": {"idx": 28}}
+    }
+    migrated = page.evaluate("(save) => loadProgress({getItem: () => JSON.stringify(save)})", legacy)
+    assert migrated["best"] == {"m": 1, "f": 0} and migrated["legacyFigs"] == 12
+    assert migrated["tr"] is False and migrated["english"] and migrated["slow"]
+    assert migrated["runs"]["chapter1-m"]["step"] == "legacy-7"
+    assert migrated["runs"]["chapter1-m"]["answers"] == {"legacy-4": "first"}
+    assert migrated["runs"]["chapter1-f"]["step"] == "legacy-28"
+    assert migrated["phrases"] == legacy["phrases"]
+    assert page.evaluate("""() => {
+      const save = {best:{m:2, f:0}, completedLessons:[]};
+      const stars = completeChapter(save, 'm', {
+        a:{correct:false}, b:{correct:false}, c:{correct:true,hint:true}
+      });
+      return stars === 1 && save.best.m === 2 && save.completedLessons.includes("chapter1");
     }""")
-    assert all(assets)
-    page.locator("#bSettings").click()
-    page.locator("#tEnglish").click()
-    assert page.locator("#tEnglish").get_attribute("aria-pressed") == "true"
-    page.locator("#bClose").click()
-    play(page, "m", retry=True, resume=True)
-    fig_count = page.evaluate("S.figs")
-    assert fig_count == page.evaluate("qTotal") - 2
-    page.get_by_role("button", name="Back to title").click()
-    page.locator("#bBook").click()
-    assert page.locator("#book .lr").count() == page.evaluate("qTotal")
-    page.get_by_role("button", name="Back to title").click()
-    play(page, "m")
-    assert page.evaluate("S.figs") == fig_count
-    page.get_by_role("button", name="Back to title").click()
-    page.locator("#bSettings").click()
-    page.locator("#bChange").click()
-    page.locator('.card[data-c="f"]').click()
-    page.reload()
+
+    page.locator("#bSettings").tap()
+    page.locator("#tEnglish").tap()
+    page.locator("#bClose").tap()
+    touch = ctx.new_cdp_session(page) if browser_type.name == "chromium" else None
+    play(page, "m", explore=True, touch=touch)
+    assert page.evaluate("S.best") == {"m": 3, "f": 0}
+    page.get_by_role("button", name="Back to title").tap()
+
+    play(page, "m", replay=True, help_on_challenge=True)
+    assert page.evaluate("S.best.m") == 3
+    assert page.locator("#end .score").inner_text() == "Greek challenge: ★★"
+    page.get_by_role("button", name="Back to title").tap()
+
+    # Verify title flows and restart safety with two saved checkpoints.
+    page.evaluate("S.runs['chapter1-m']={...newRun(),step:'legacy-13'}; save(); show('title')")
+    page.locator("#bSettings").tap()
+    page.locator("#bChange").tap()
+    page.locator('.card[data-c="f"]').tap()
+    page.locator("#bGo").tap()
+
     server.shutdown()
     server.server_close()
     page.goto(base + "?offline=1")
-    play(page, "f", retry=True)
-    assert page.evaluate("S.figs") == fig_count
-    assert page.evaluate('S.phrases["Είμαι έτοιμη"]') == "I'm ready"
+    play(page, "f", explore=True, help_on_challenge=True)
+    assert page.evaluate("S.best") == {"m": 3, "f": 2}
+    assert page.evaluate("S.runs['chapter1-m'].step") == "legacy-13"
     assert page.evaluate("S.english")
-    assert not failures, failures
-    for width, height in [(320, 568), (430, 932), (1280, 800)]:
+    page.get_by_role("button", name="Back to title").tap()
+
+    page.evaluate("S.runs['chapter1-f']={...newRun(),step:'legacy-31'}; save(); show('title')")
+    page.locator("#bNew").tap()
+    page.once("dialog", lambda dialog: dialog.dismiss())
+    page.locator("#bGo").tap()
+    assert page.evaluate("S.runs['chapter1-f'].step") == "legacy-31"
+    page.once("dialog", lambda dialog: dialog.accept())
+    page.locator("#bGo").tap()
+    assert page.evaluate("S.runs['chapter1-f'].step") == "legacy-0"
+    assert page.evaluate("S.runs['chapter1-m'].step") == "legacy-13"
+    assert page.evaluate("S.best") == {"m": 3, "f": 2}
+    assert page.evaluate("S.english")
+    page.locator("#bQuit").tap()
+
+    for width, height in [(320, 568), (390, 844), (430, 932)]:
         page.set_viewport_size({"width": width, "height": height})
-        page.goto(base)
         assert page.locator("#bPlay").is_visible()
         assert page.evaluate("document.documentElement.scrollWidth === innerWidth")
-        button = page.locator("#bPlay").bounding_box()
-        assert button and button["y"] + button["height"] <= height
-        page.locator("#bPlay").click()
-        assert page.locator("#panel .next").is_visible()
-        page.locator("#bQuit").click()
+        for scene, labels in [("van", ".van-board"), ("arrivals", ".airport-board")]:
+            page.evaluate("""(scene) => {
+                show('lesson'); idx=steps.findIndex(step=>step.scene===scene); render();
+            }""", scene)
+            stage = page.locator("#scene").bounding_box()
+            for label in page.locator(labels).all():
+                box = label.bounding_box()
+                assert box and stage
+                assert box["x"] >= stage["x"] and box["y"] >= stage["y"]
+                assert box["x"] + box["width"] <= stage["x"] + stage["width"]
+                assert box["y"] + box["height"] <= stage["y"] + stage["height"]
+        page.locator("#bQuit").tap()
+    page.locator("#bSettings").tap()
+    page.once("dialog", lambda dialog: dialog.dismiss())
+    page.locator("#bReset").tap()
+    assert page.evaluate("S.best.f") == 2
+    page.once("dialog", lambda dialog: dialog.accept())
+    page.locator("#bReset").tap()
+    assert page.evaluate("S.best") == {"m": 0, "f": 0}
+    assert page.evaluate("S.english && Object.keys(S.runs).length === 0")
+    assert not errors, errors
     browser.close()
 
 
@@ -175,4 +263,4 @@ if __name__ == "__main__":
     Thread(target=server.serve_forever, daemon=True).start()
     with sync_playwright() as playwright:
         check(getattr(playwright, args.engine), f"http://127.0.0.1:{server.server_port}/SidariQuest/", server, args.executable)
-    print(f"{args.engine}: both characters, retry, resume, replay, phrasebook, manifest, offline, and viewport smoke checks passed")
+    print(f"{args.engine}: Chapter 1, rating, migration, controls, offline and viewport smoke checks passed")

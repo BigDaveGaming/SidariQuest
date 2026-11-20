@@ -6,16 +6,16 @@ The approved [title reference](../art/reference/style_reference_title_screen.png
 
 Dialogue scenes use six intact full-body assets as the source for closer framing. The dialogue panel hides the lower bodies, and the mini-market counter sits in front of the shopkeeper. Dave uses his existing approved standing design. Sharon has a hands-free standing pose. Spyros Rent-a-Van, Kyria Eleni, Kyrios Spyros and Fat Spyros use the faces and visible clothing from their approved references, extended to full length. Wide location shots establish the setting before the characters move into the foreground for dialogue. Dave and Sharon swap to matching full-figure reactions for correct answers, mistakes and the van price reveal. Expression sprites use the same runtime dimensions as each neutral figure so the dialogue framing stays fixed.
 
-Original PNGs remain in place. New masters are under `art/raw/approved/`; run the importer to refresh the WebPs, remove nearly transparent edge noise, and add uniform padding. Sharon uses her phone to film the view in the plane. The title, baggage reclaim and arrivals panels show her with empty hands.
+Original PNGs remain in place. New masters are under `art/raw/approved/`; run the importer to refresh the WebPs, remove nearly transparent edge noise, and add uniform padding. In Final Approach, Dave is awake with his hands resting on his knees and Sharon uses her phone for Duolingo. Cutscene avatars and the kitchen reactions reuse or follow the approved reaction pack. The title, baggage reclaim and arrivals panels show her with empty hands.
 
 ## Artwork from the first playtest
 
 - Preserved the title background, logo, tagline, full-body character art, and the existing Dave and Sharon WebPs other than the repaired shocked portrait. The approved title master and reference files remain in the repository.
 - Generated and integrated the four location backgrounds from the brief. The office and apartment exterior use warm plaster, terracotta and faded green shutters, with blank signboards. The kitchen and market use a wider palette of tiled floors, olive greens and warm plaster. The in-game title supplies the Greek sign at the hire office.
 - Produced a transparent, left-facing Spyros Rent-a-Van normal portrait from the approved portrait reference. It retains his dark curls, moustache, plain navy polo, glasses at the collar and clipboard. It remains available as source material for a future portrait layout.
-- Integrated three painted airport panels. Greek airport-sign labels and translations are rendered outside the artwork.
+- Integrated three painted airport panels. Greek airport-sign labels and translations are overlaid on the painted boards.
 - Redrew the shocked Sharon portrait from the approved crop with opaque figure alpha, a clear edge and no neighbouring image sliver. Preserved the original raw PNG. Full expression-set framing still needs a shared guide.
-- Added a transparent fig reward and the illustrated van app icon. The icon master exports to the 180, 192 and 512 px runtime PNG sizes.
+- Added a transparent fig illustration and the illustrated van app icon. The fig is now decorative artwork. The icon master exports to the 180, 192 and 512 px runtime PNG sizes.
 - Sharon’s original seven bust files are 640 × 640 with zero fully opaque pixels. Their existing WebPs restore opacity and are visibly usable, but that cleanup left crop and fringe issues. Dave’s 600 × 600 busts have alpha, though the source crop dimensions fall short of the 1024 px masters and contain defects. All twelve old local crops are fully opaque at roughly 430–446 × 245–275, with baked-in captions. Those crops remain as source references rather than game portraits.
 
 ## Optional portrait work for a future layout

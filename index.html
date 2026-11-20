@@ -52,7 +52,7 @@ button{font-family:inherit;cursor:pointer}
 .x{border:0;background:rgba(255,255,255,.85);border-radius:50%;width:34px;height:34px;font-size:18px;font-weight:900;color:var(--deep)}
 .bar{flex:1;height:14px;border-radius:9px;background:rgba(255,255,255,.5);overflow:hidden;border:2px solid #fff}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd84a,#f07a3a);transition:width .4s}
-.figs{background:rgba(255,255,255,.9);border-radius:14px;padding:4px 10px;font-weight:900;color:#6a2a6e;font-size:15px}
+.stars{background:rgba(255,255,255,.9);border-radius:14px;padding:4px 10px;font-weight:900;color:#6a2a6e;font-size:15px}
 .scene{position:relative;flex:1;min-height:0;overflow:hidden;container-type:size}
 .bg{position:absolute;inset:0}
 .gsign{position:absolute;left:18%;right:18%;top:17%;padding:5px 6px;background:#fff;border:3px solid var(--blue);border-radius:6px;text-align:center;color:var(--blue);font-weight:900;font-size:clamp(12px,3.6vw,17px);letter-spacing:.5px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
@@ -85,6 +85,17 @@ button{font-family:inherit;cursor:pointer}
 .fb{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.4}
 .fb.good{background:#e5f6e9;border:2px solid var(--good)}
 .fb.bad{background:#fbe6e6;border:2px solid var(--bad)}
+.cutscene-line{display:flex;gap:10px;align-items:center;min-height:50px}
+.cutscene-avatar{width:48px;height:48px;flex:none;border-radius:50%;overflow:hidden;background:#f8deab;border:2px solid var(--deep)}
+.cutscene-avatar img{width:100%;display:block}
+.phrase-card{padding:12px;background:#fff3d7;border:1px solid #cdbb94;border-radius:9px}
+.phrase-card h2,.panel h2{margin:0 0 8px;font-size:18px;color:var(--deep)}
+.phrase-meaning{font-weight:800;margin-top:6px}
+.word-chips{display:flex;flex-wrap:wrap;gap:5px}
+.word-chips .tile{font-size:15px;padding:4px 8px}
+.gloss,.phrase-tip,.reaction-line,.correction,.said-greek{margin:6px 0}
+.hint{margin:0 0 6px}
+.hint summary{cursor:pointer;padding:8px 0;color:var(--deep);font-weight:700}
 .answer-meaning{margin:0 0 6px;font-weight:800}
 .fb b{display:block;font-size:16px;margin-bottom:2px}
 .next{margin-top:10px;width:100%}
@@ -92,6 +103,9 @@ button{font-family:inherit;cursor:pointer}
 .answer{border-bottom:3px dashed #cdbb94;padding:6px 0 10px;margin-bottom:10px}
 .tile{border:3px solid #cdbb94;background:#fff;border-radius:12px;padding:7px 12px;font-size:18px;font-weight:800;color:var(--deep);box-shadow:0 3px 0 #cdbb94}
 .tile.used{visibility:hidden}
+.tiles .tile,.answer .tile{touch-action:none;user-select:none;-webkit-user-select:none}
+.tile-dragging{opacity:.4}
+.tile-preview{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%)}
 
 /* ---------- END ---------- */
 #end{background:linear-gradient(#2893fc,#ffe2a8);overflow-y:auto}
@@ -174,12 +188,29 @@ button{font-family:inherit;cursor:pointer}
   top:clamp(34px, calc(44cqh + max(9cqw,6cqh) - clamp(65px,27cqw,130px)), max(34px,calc(100% - 130px)));
 }
 .gsign{z-index:4}
+[data-place="van"] .bg,[data-place="arrivals"] .bg{background-position:center top}
+.painted-signs{
+  position:absolute;z-index:2;left:50%;top:0;transform:translateX(-50%);
+  width:max(100cqw,66.6667cqh);height:max(150cqw,100cqh);pointer-events:none;
+}
+.painted-signs span{font-weight:900;color:#2d3d28}
+.van-board,.airport-board{
+  position:absolute;transform:translate(-50%,-50%);text-align:center;
+  line-height:1.05;letter-spacing:.03em;text-shadow:0 1px #ffedc8;
+}
+.van-board{left:32%;top:23.7%;font-size:clamp(10px,3.3cqw,19px);rotate:3deg}
+.airport-board{left:55%;font-size:clamp(13px,4.4cqw,24px)}
+.airport-board small{display:block;font-size:.63em}
+.airport-board:nth-child(1){top:10.6%;rotate:-6deg}
+.airport-board:nth-child(2){top:19.4%;rotate:-4deg}
+.airport-board:nth-child(3){top:28%;rotate:-2deg}
+@media(max-height:600px){[data-place="arrivals"] .bg{background-position:center top}}
+
 .panel{max-height:68%;flex-shrink:0;overscroll-behavior:contain;scroll-padding:8px}
 .scene:has(.cast:not([hidden])) + .panel{flex-basis:clamp(232px,39%,355px)}
 .opt,.btn,.tile,.say,.lr .say,.tog,.x,.reveal{min-height:44px}
 .say,.lr .say,.x{min-width:44px}
 .say:disabled{opacity:.45}
-.figs img{width:20px;height:20px;vertical-align:middle;margin-right:5px}
 .tog{min-height:44px;background:linear-gradient(transparent 7px,#bbb 7px,#bbb 37px,transparent 37px);flex:none}
 .tog.on{background:linear-gradient(transparent 7px,var(--good) 7px,var(--good) 37px,transparent 37px)}
 .tog::after{top:10px}
@@ -203,6 +234,7 @@ button{font-family:inherit;cursor:pointer}
     <img class="tagline" src="assets/tagline.webp" alt="Learn Greek. Cause Chaos.">
     <div class="menu">
       <button class="btn play" id="bPlay">▶ Play</button>
+      <button class="btn small" id="bNew">New Game</button>
       <button class="btn small" id="bBook">Phrasebook</button>
       <button class="btn small" id="bSettings">⚙ Settings</button>
     </div>
@@ -213,12 +245,13 @@ button{font-family:inherit;cursor:pointer}
 <!-- CHARACTER SELECT -->
 <section id="select" class="screen">
   <h1>Who are you playing as?</h1>
-  <p class="sub">This decides whether you learn the man's or woman's form of Greek words.</p>
+  <p class="sub" id="selectionNote">This decides whether you learn the man's or woman's form of Greek words.</p>
   <div class="cards">
     <button class="card" data-c="m"><img src="assets/dave_full.webp" alt=""><div class="nm">Big Dave</div><div class="gr" lang="el">είμαι έτοιμος</div></button>
     <button class="card" data-c="f"><img src="assets/sharon_full.webp" alt=""><div class="nm">Gobby Sharon</div><div class="gr" lang="el">είμαι έτοιμη</div></button>
   </div>
   <button class="btn play go" id="bGo" disabled style="opacity:.5">Let's go!</button>
+  <button class="btn small go" id="bCancelSelect">Back</button>
 </section>
 
 <!-- LESSON -->
@@ -226,11 +259,17 @@ button{font-family:inherit;cursor:pointer}
   <div class="top">
     <button class="x" id="bQuit" aria-label="Save and return to title">✕</button>
     <div class="bar"><i id="prog"></i></div>
-    <div class="figs" id="figs">🟣 0</div>
+    <div class="stars" id="stars"></div>
   </div>
   <div class="scene" id="scene">
     <div class="bg"></div>
     <div class="gsign" id="sceneSign"></div>
+    <div class="painted-signs" id="vanSign" hidden><span class="van-board" lang="el">ΕΝΟΙΚΙΑΣΕΙΣ<br>ΑΥΤΟΚΙΝΗΤΩΝ</span></div>
+    <div class="painted-signs" id="arrivalsSigns" hidden>
+      <span class="airport-board"><span lang="el">ΑΦΙΞΕΙΣ</span><small>Arrivals</small></span>
+      <span class="airport-board"><span lang="el">ΑΠΟΣΚΕΥΕΣ</span><small>Baggage</small></span>
+      <span class="airport-board"><span lang="el">ΕΞΟΔΟΣ</span><small>Exit</small></span>
+    </div>
     <div class="cast" id="cast" hidden>
       <div class="actor"><img class="player" id="player" alt=""></div>
       <div class="actor local" id="localActor"><img id="localFigure" alt=""></div>
@@ -252,6 +291,7 @@ button{font-family:inherit;cursor:pointer}
     <div class="row">Show English dialogue <button class="tog" id="tEnglish" aria-label="Show English dialogue"></button></div>
     <div class="row">Slow Greek audio <button class="tog" id="tSlow" aria-label="Slow Greek audio"></button></div>
     <div class="row">Change character <button class="btn small" id="bChange">Change</button></div>
+    <div class="row">Erase both story saves and learning records <button class="btn small" id="bReset">Reset Progress</button></div>
     <p class="note" id="voiceNote"></p>
     <button class="btn next" id="bClose">Done</button>
   </div>
@@ -273,7 +313,9 @@ const NAME=()=>S.c==="f"?"Sharon":"Dave";
 const fill=s=>String(G(s)).replace(/\{P\}/g,NAME()).replace(/\{PG\}/g,S.c==="f"?"Σάρον":"Ντέιβ");
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 function show(id){
-  if(id==="title") $("#bPlay").textContent = S.c && S.runs[`${CHAPTER.id}-${S.c}`] ? "Continue Adventure" : S.completedLessons.includes(CHAPTER.id) ? "Replay Chapter 1" : "▶ Play";
+  if(id==="title"){
+    $("#bPlay").textContent = S.c && S.runs[`${CHAPTER.id}-${S.c}`] ? "Continue Adventure" : S.best[S.c] ? "Replay Chapter 1" : "▶ Play";
+  }
   document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));
 }
 
@@ -322,14 +364,14 @@ function syncAudioButton(button){
   button.disabled=!greekVoice;
 }
 try{findVoice();speechSynthesis.addEventListener("voiceschanged",()=>{findVoice();document.querySelectorAll(".say").forEach(syncAudioButton)})}catch(e){}
-function speak(t){
+function speak(t, slow=S.slow){
   findVoice();
   if(!greekVoice) return;
   try{
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(t);
     u.lang="el-GR";u.voice=greekVoice;
-    u.rate=S.slow?0.65:0.9;speechSynthesis.speak(u);
+    u.rate=slow?0.65:0.9;speechSynthesis.speak(u);
   }catch{}
 }
 function audioButton(gr){
@@ -365,10 +407,9 @@ const LOCAL_FIGURES={
   "Fat Spyros":"fat_spyros_full"
 };
 let run, runKey, idx, speaker;
-const steps=CHAPTER.steps;
-const qTotal=steps.filter(s=>s.t==="q"||s.t==="build").length;
+const steps=[...STORY_STEPS,...CHALLENGE];
 const player=$("#player"), panel=$("#panel");
-const PLAYER_REACTIONS=["pleased","cringe","confused","shocked","talking"];
+const PLAYER_REACTIONS=["pleased","cringe","confused","shocked","talking","fuming"];
 const playerName=()=>S.c==="f"?"sharon":"dave";
 const playerPath=(expression="neutral")=>{
   const base=playerName()+"_full";
@@ -391,19 +432,21 @@ function startLesson(){
   }
   runKey=`${CHAPTER.id}-${S.c}`;
   const saved=S.runs[runKey];
-  run=saved && Number.isInteger(saved.idx) && steps[saved.idx] && saved.answers
-    ? saved : {idx:0,answers:{}};
+  const checkpoint=steps.findIndex(step=>step.id===saved?.step);
+  run=checkpoint>=0 ? saved : newRun();
+  if(checkpoint<0)run.skipIntro=!!S.visited[S.c];
   S.runs[runKey]=run;
-  idx=run.idx;
+  idx=Math.max(0,checkpoint);
+  S.visited[S.c]=true;
   save();
   show("lesson");
   render();
 }
 function updateTop(){
   $("#prog").style.width=(idx/steps.length*100)+"%";
-  const figs=$("#figs"), icon=artPath("fig");
-  figs.textContent=icon?String(S.figs):"🟣 "+S.figs;
-  if(icon){const img=el("img");img.src=icon;img.alt="Figs";figs.prepend(img)}
+  const best=S.best[S.c];
+  $("#stars").textContent=best ? `Best ${"★".repeat(best)}` : "";
+  $("#stars").hidden=!best;
 }
 function nextBtn(label="Continue"){
   const b=el("button","btn play next",label);
@@ -411,7 +454,7 @@ function nextBtn(label="Continue"){
     b.disabled=true;
     idx++;
     if(idx===steps.length){finish();return}
-    run.idx=idx;
+    run.step=steps[idx].id;
     save();
     render();
     panel.focus({preventScroll:true});
@@ -428,7 +471,10 @@ function render(){
   stage.style.setProperty("--scene-art",art ? `url("${art}")` : "none");
   stage.dataset.place=sceneKey;
   $("#sceneSign").textContent=scene.name;
-  $("#cast").hidden=!speaker||st.wide===true;
+  $("#vanSign").hidden=sceneKey!=="van";
+  $("#arrivalsSigns").hidden=sceneKey!=="arrivals";
+  $("#sceneSign").hidden=["van","arrivals"].includes(sceneKey);
+  $("#cast").hidden=!speaker||st.wide===true||st.kind==="sign"||["teach","challenge"].includes(st.t);
   if(!$("#cast").hidden){
     const localFigure=$("#localFigure");
     const src=artPath(LOCAL_FIGURES[speaker]);
@@ -441,10 +487,17 @@ function render(){
   updateTop();
   panel.replaceChildren();
   panel.scrollTop=0;
+  if(st.t==="cutscene"){renderCutscene(st);return}
+  if(st.t==="teach"){renderTeach(st);return}
+  if(st.t==="challenge"){renderChallenge(st);return}
+  if(st.phrase && !run.learned[st.phrase]){
+    // Older checkpoints may resume after the new phrasebook beat.
+    renderTeach(PHRASES[st.phrase],true);
+    return;
+  }
   if(st.t==="narr"||st.t==="me"){
-    if(st.t==="me")react("bump","talking");
+    if(st.t==="me")react("bump",st.reaction||"talking");
     panel.append(el("div","who",st.t==="me"?NAME():"Corfu"),el("div","line",fill(st.text)));
-    if(st.scene==="arrivals")panel.append(el("div","en","Arrivals · Baggage · Exit"));
     panel.append(nextBtn());
     return;
   }
@@ -457,14 +510,14 @@ function render(){
     panel.append(en,nextBtn());
     return;
   }
-  const result=run.answers[idx];
+  const result=run.answers[st.id];
   if(result==="first"||result==="retried"){
     feedback(st,true);
     return;
   }
+  if(st.phrase)panel.append(hintButton(st.phrase));
   if(st.t==="build"){renderBuild(st);return}
   if(st.kind==="meaning"&&st.gr)panel.append(el("div","who",speaker),greekBlock(st.gr));
-  if(st.kind==="sign")panel.append(el("div","bigsign",st.sign));
   panel.append(el("div","prompt",fill(st.prompt)));
   const box=el("div","opts");
   shuffle(st.opts).forEach(o=>{
@@ -478,84 +531,291 @@ function render(){
       b.classList.add(o.ok?"right":"wrong");
       if(gr)speak(gr);
       const wrong=st.opts.filter(option=>!option.ok).indexOf(o);
-      feedback(st,!!o.ok,st.badOptions?.[wrong],o,wrong===1?"confused":"cringe");
+      feedback(st,!!o.ok,st.badOptions?.[wrong],o,wrong);
     };
     box.append(b);
   });
   panel.append(box);
 }
-function feedback(st,ok,joke,choice,wrongReaction="cringe"){
-  const previous=run.answers[idx];
+function feedback(st,ok,joke,choice,wrong=0){
+  const previous=run.answers[st.id];
   if(ok){
-    if(previous!=="first"&&previous!=="retried")run.answers[idx]=previous==="missed"?"retried":"first";
+    if(previous!=="first"&&previous!=="retried")run.answers[st.id]=previous==="missed"?"retried":"first";
     if(st.learn){
       const phrase=st.learn.map(fill);
       S.phrases[phrase[0]]=phrase[1];
     }
   }else{
-    run.answers[idx]="missed";
+    run.answers[st.id]="missed";
   }
   save();
-  react(ok?"bump":"shake",ok?(st.reaction||"pleased"):wrongReaction);
+  react(ok?"bump":"shake",ok?(st.reaction||"pleased"):wrong===1?"confused":"cringe");
   const fb=el("div","fb "+(ok?"good":"bad"));
   fb.setAttribute("role","status");
   if(!ok){
     const correct=st.opts?.find(option=>option.ok);
-    const explanation=choice?.gr
-      ? `You just ${fill(choice.gr).endsWith(";")?"asked":"said"} “${fill(choice.en)}”`
-      : st.t==="build"
-        ? `Aim for ${st.answer} · ${fill(st.learn[1])}`
-        : `It means “${fill(correct.en)}”`;
-    const meaning=el("p","answer-meaning");
-    meaning.textContent=explanation;
-    fb.append(meaning);
+    if(choice?.gr){
+      const said=el("p","answer-meaning");
+      said.textContent=`YOU SAID: ${fill(choice.en)}`;
+      const greek=el("p","said-greek");
+      greek.lang="el";greek.textContent=fill(choice.gr);
+      fb.append(said,greek);
+    }else if(choice){
+      fb.append(el("p","answer-meaning",`You chose “${fill(choice.en)}”.`));
+    }
+    const exchange=choice?.exchange?.[S.c];
+    if(exchange){
+      for(const [character,line] of exchange)fb.append(dialogueLine(character,line));
+    }else{
+      if(speaker)fb.append(dialogueLine(speaker,st.replies?.[wrong] || "Let's try that again."));
+      fb.append(el("p","reaction-line",fill(joke||st.bad||{
+        m:"Spyros studies the jumble of words. Dave’s ready to draw him a van.",
+        f:"Spyros reaches for a pen. Sharon catches herself about to spell VAN in English."
+      })));
+    }
+    const card=PHRASES[st.phrase];
+    const correction=el("p","correction");
+    correction.textContent=choice?.exchange
+      ? "Καλή όρεξη! means “Enjoy your meal!” For this morning greeting, say Καλημέρα! (“Good morning!”)."
+      : `Try ${fill(card?.gr || correct?.gr || st.answer)} · ${fill(card?.en || correct?.en)}. ${fill(st.why)}`;
+    fb.append(correction);
+  }else{
+    fb.append(el("b",null,fill(st.good||"Σωστά! — Correct!")),document.createTextNode(fill(st.why)));
   }
-  fb.append(el("b",null,fill(ok?st.good||"Σωστά! — Correct!":joke||st.bad||{
-    m:"Spyros studies the jumble of words. Dave’s ready to draw him a van.",
-    f:"Spyros reaches for a pen. Sharon catches herself about to spell VAN in English."
-  })),document.createTextNode(fill(st.why)));
   panel.append(fb);
   if(ok){
     panel.append(nextBtn());
   }else{
-    const retry=el("button","btn play next","Try again");
+    const retry=el("button","btn play next","Have another go");
     retry.onclick=()=>{render();panel.querySelector("button")?.focus({preventScroll:true})};
     panel.append(retry);
   }
   fb.scrollIntoView({block:"nearest"});
 }
+function dialogueLine(character,text){
+  const line=el("p","reaction-line");
+  const name=el("strong",null,character+" ");
+  line.append(name,document.createTextNode(text));
+  return line;
+}
+
+function renderCutscene(st){
+  const index=run.cutscene||0;
+  const [character,text,greek]=st.lines[index];
+  panel.append(el("div","who","Final Approach"));
+  if(index===0)panel.append(el("p","note","Sharon taps through her last Duolingo question as they descend towards Corfu."));
+  const line=el("div","cutscene-line");
+  if(character){
+    const avatar=el("span","cutscene-avatar");
+    const figure=el("img");
+    const name=character==="Dave"?"dave":"sharon";
+    const expression=[0,16].includes(index)?"pleased":[8,9,12,13].includes(index)?"confused":"talking";
+    figure.src=artPath(name+"_full_"+expression);
+    figure.alt="";
+    avatar.append(figure);
+    line.append(avatar);
+  }
+  const copy=el("div");
+  if(character)copy.append(el("strong",null,character));
+  if(greek)copy.append(greekBlock(text));
+  else copy.append(el("div","line",text));
+  if(index===5)copy.append(el("p","note","Dave heard that in the pub. Speaking Greek doesn’t change the listed price."));
+  line.append(copy);
+  panel.append(line);
+  const next=nextBtn(index===st.lines.length-1?"Continue":"Next line");
+  if(index<st.lines.length-1)next.onclick=()=>{run.cutscene=index+1;save();render();panel.querySelector(".next")?.focus({preventScroll:true})};
+  panel.append(next);
+  if(run.skipIntro)panel.append(nextBtn("Skip prologue"));
+}
+
+function phraseCard(st){
+  const book=el("article","phrase-card");
+  const greek=fill(st.gr);
+  book.append(el("h2",null,"Greek for Beginners"),greekBlock(greek));
+  const slow=el("button","reveal","Play slowly");
+  slow.onclick=()=>speak(greek,true);
+  book.append(el("div","phrase-meaning",fill(st.en)),slow);
+  const words=el("div","word-chips");
+  const gloss=el("p","gloss","Tap a word to hear it and see its meaning.");
+  gloss.setAttribute("aria-live","polite");
+  greek.split(/\s+/).forEach((word,index)=>{
+    const chip=el("button","tile");
+    chip.lang="el";chip.textContent=word;
+    chip.onclick=()=>{speak(word);gloss.textContent=st.words[index]||fill(st.en)};
+    words.append(chip);
+  });
+  book.append(words,gloss,el("p","phrase-tip",fill(st.tip)));
+  return book;
+}
+
+function hintButton(phrase,onOpen){
+  const details=el("details","hint");
+  details.append(el("summary",null,"📖 Phrasebook hint"),phraseCard(PHRASES[phrase]));
+  details.firstElementChild.onclick=()=>{
+    if(details.open)return;
+    onOpen?.();
+    speak(fill(PHRASES[phrase].gr));
+  };
+  return details;
+}
+
+function renderTeach(st,atCheckpoint=false){
+  panel.append(phraseCard(st),el("p","prompt","Quick check · What does this mean?"));
+  speak(fill(st.gr));
+  const options=el("div","opts");
+  const alternatives=Object.values(PHRASES).filter(card=>card!==st);
+  const choices=shuffle([st,...shuffle(alternatives).slice(0,2)]);
+  for(const card of choices){
+    const button=el("button","opt");
+    button.textContent=fill(card.en);
+    button.onclick=()=>{
+      if(card!==st){
+        button.disabled=true;
+        button.classList.add("wrong");
+        status.textContent="Have another go. Check the English on the card.";
+        return;
+      }
+      run.learned[st.phrase]=true;
+      S.phrases[fill(st.gr)]=fill(st.en);
+      save();
+      if(atCheckpoint){render();return}
+      nextBtn().click();
+    };
+    options.append(button);
+  }
+  const status=el("p","note");
+  status.setAttribute("role","status");
+  panel.append(options,status);
+}
+
+function renderChallenge(st){
+  const card=PHRASES[st.phrase];
+  const required=[st.phrase,...st.alternatives];
+  const unlearned=required.find(phrase=>!run.learned[phrase]);
+  if(unlearned){renderTeach(PHRASES[unlearned],true);return}
+  const number=CHALLENGE.indexOf(st)+1;
+  panel.append(el("h2",null,"Greek challenge"),
+    el("p","note",`Question ${number} of ${CHALLENGE.length}. Only this challenge counts for your stars.`));
+  panel.append(st.recall?el("p","prompt",`Pick the Greek for “${fill(card.en)}”`):greekBlock(fill(card.gr)));
+  const stored=run.challenge[st.id];
+  if(stored?.answered){challengeFeedback(card,stored);return}
+  const result=stored||{hint:false};
+  panel.append(hintButton(st.phrase,()=>{
+    result.hint=true;run.challenge[st.id]=result;save();
+  }));
+  const choiceBox=el("div","opts");
+  for(const key of shuffle(required)){
+    const button=el("button","opt");
+    button.textContent=fill(PHRASES[key][st.recall?"gr":"en"]);
+    if(st.recall)button.lang="el";
+    button.onclick=()=>{
+      for(const option of choiceBox.children)option.disabled=true;
+      result.correct=key===st.phrase;
+      result.answered=true;
+      run.challenge[st.id]=result;save();
+      challengeFeedback(card,result);
+    };
+    choiceBox.append(button);
+  }
+  panel.append(choiceBox);
+}
+
+function challengeFeedback(card,result){
+  const feedback=el("p",result.correct?"fb good":"fb bad");
+  feedback.textContent=`${result.correct?"Correct.":"The answer is"} ${fill(card.gr)} · ${fill(card.en)}`;
+  panel.append(feedback,nextBtn(idx===steps.length-1?"See my stars":"Next question"));
+  feedback.scrollIntoView({block:"nearest"});
+}
+
 function renderBuild(st){
   panel.append(el("div","prompt",fill(st.prompt)));
-  const answer=el("div","answer"), tiles=el("div","tiles");
+  const answer=el("div","answer"), bank=el("div","tiles");
+  answer.setAttribute("aria-label","Answer row");
+  bank.setAttribute("aria-label","Word bank");
   const check=el("button","btn play next","Check");
   check.disabled=true;
-  shuffle(st.answer.split(" ").concat(st.extra||[])).forEach(word=>{
+  let drag;
+  let suppressPointerClick=false;
+  const controls=el("div");
+  controls.addEventListener("pointerdown",()=>{suppressPointerClick=false},true);
+  controls.addEventListener("click",event=>{
+    if(!suppressPointerClick||event.detail===0)return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressPointerClick=false;
+  },true);
+
+  function move(tile,target,before=null){
+    target.insertBefore(tile,before);
+    check.disabled=!answer.children.length;
+  }
+  function clearDrag(){
+    if(!drag)return;
+    drag.tile.classList.remove("tile-dragging");
+    drag.preview?.remove();
+    drag=null;
+  }
+  const words=st.answer.split(" ").concat(st.extra||[]);
+  shuffle(words).forEach(word=>{
     const tile=el("button","tile",word);
     tile.lang="el";
-    tile.onclick=()=>{
-      tile.classList.add("used");
-      const picked=el("button","tile",word);
-      picked.lang="el";
-      picked.onclick=()=>{
-        picked.remove();
-        tile.classList.remove("used");
-        check.disabled=!answer.children.length;
-        tile.focus();
-      };
-      answer.append(picked);
-      check.disabled=false;
+    function tapTile(){
+      speak(word);
+      move(tile,tile.parentElement===bank?answer:bank);
+      tile.focus({preventScroll:true});
+    }
+    tile.onclick=event=>{if(event.detail===0)tapTile()};
+    tile.onpointerdown=event=>{
+      if(!event.isPrimary||event.button!==0||drag)return;
+      drag={tile,id:event.pointerId,x:event.clientX,y:event.clientY};
+      tile.setPointerCapture(event.pointerId);
     };
-    tiles.append(tile);
+    tile.onpointermove=event=>{
+      if(drag?.id!==event.pointerId)return;
+      if(!drag.preview&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>6){
+        speak(word);
+        drag.preview=el("span","tile tile-preview",word);
+        drag.preview.setAttribute("aria-hidden","true");
+        document.body.append(drag.preview);
+        tile.classList.add("tile-dragging");
+      }
+      if(drag.preview){
+        drag.preview.style.left=event.clientX+"px";
+        drag.preview.style.top=event.clientY+"px";
+      }
+    };
+    tile.onpointerup=event=>{
+      if(drag?.id!==event.pointerId)return;
+      suppressPointerClick=true;
+      if(drag.preview){
+        const hit=document.elementFromPoint(event.clientX,event.clientY);
+        const target=hit?.closest(".tiles,.answer");
+        const sibling=hit?.closest(".tile");
+        if(target&&sibling!==tile){
+          const bounds=sibling?.getBoundingClientRect();
+          const before=bounds&&event.clientX>bounds.left+bounds.width/2 ? sibling.nextElementSibling : sibling;
+          move(tile,target,before||null);
+        }
+      }else{
+        tapTile();
+      }
+      clearDrag();
+    };
+    tile.onpointercancel=tile.onlostpointercapture=event=>{
+      if(drag?.tile===tile&&drag.id===event.pointerId)clearDrag();
+    };
+    bank.append(tile);
   });
   check.onclick=()=>{
     const said=Array.from(answer.children,b=>b.textContent).join(" ");
     check.remove();
-    for(const tile of [...tiles.children,...answer.children])tile.disabled=true;
+    for(const tile of [...bank.children,...answer.children])tile.disabled=true;
     const ok=said===st.answer;
     if(ok)speak(said);
     feedback(st,ok);
   };
-  panel.append(answer,tiles,check);
+  controls.append(answer,bank,check);
+  panel.append(controls);
 }
 function phraseList(entries){
   const list=el("div","learned");
@@ -579,33 +839,68 @@ function homeButton(){
   return b;
 }
 function finish(){
-  const score=Object.values(run.answers).filter(result=>result==="first").length;
-  const earned=completeChapter(S,CHAPTER.id,run,step=>steps[step]?.legacyReward);
+  const stars=completeChapter(S,S.c,run.challenge);
   delete S.runs[runKey];
   save();
   const w=$("#endWrap"), f=el("img","face");
   f.alt="";f.src=playerPath("pleased");
   w.replaceChildren(el("h1",null,"Chapter 1 complete"),f,
-    el("div","line","Van parked. Shopping done. The buffet is officially self-service."),
-    el("div","score",`${score} / ${qTotal} correct first try · +${earned} figs · ${S.figs} total`),
-    phraseList(steps.flatMap(st=>st.learn?[st.learn.map(fill)]:[])));
-  const again=el("button","btn play next","Replay Chapter 1");
+    el("div","score",`Greek challenge: ${"★".repeat(stars)}`),
+    el("div","line",`Best · Dave ${starLabel("m")} · Sharon ${starLabel("f")}`),
+    phraseList(Object.entries(S.phrases)));
+  const again=el("button","btn play next","Replay Chapter");
   again.onclick=startLesson;
   w.append(again,homeButton());
   show("end");
 }
+function starLabel(character){return S.best[character] ? "★".repeat(S.best[character]) : "—"}
 $("#bBook").onclick=()=>{
   $("#bookWrap").replaceChildren(el("h1",null,"Phrasebook"),phraseList(Object.entries(S.phrases)),homeButton());
   show("book");
 };
 
 /* ---------- title / select / settings wiring ---------- */
-$("#bPlay").onclick=()=>{S.c?startLesson():openSelect()};
-function openSelect(){show("select");document.querySelectorAll(".card").forEach(c=>syncCard(c,c.dataset.c===S.c));updGo()}
-function syncCard(card,selected){card.classList.toggle("sel",selected);card.setAttribute("aria-pressed",selected)}
-function updGo(){const g=$("#bGo");g.disabled=!S.c;g.style.opacity=S.c?1:.5}
-document.querySelectorAll(".card").forEach(c=>c.onclick=()=>{S.c=c.dataset.c;save();document.querySelectorAll(".card").forEach(x=>syncCard(x,x===c));updGo()});
-$("#bGo").onclick=()=>{if(S.c)startLesson()};
+let selectedCharacter, selectionMode;
+$("#bPlay").onclick=()=>{S.c?startLesson():openSelect("continue")};
+$("#bNew").onclick=()=>openSelect("new");
+function openSelect(mode){
+  selectionMode=mode;
+  selectedCharacter=S.c;
+  show("select");
+  updateSelection();
+}
+function updateSelection(){
+  for(const card of document.querySelectorAll(".card")){
+    const character=card.dataset.c;
+    const selected=character===selectedCharacter;
+    card.classList.toggle("sel",selected);
+    card.setAttribute("aria-pressed",selected);
+    card.querySelector(".character-best").textContent=`Best ${starLabel(character)}`;
+  }
+  $("#selectionNote").textContent=selectionMode==="new"
+    ?"Restart one character’s story. Best stars, learned phrases and the other save are kept."
+    :"Dave and Sharon have separate checkpoints and best stars.";
+  $("#bGo").disabled=!selectedCharacter;
+  $("#bGo").style.opacity=selectedCharacter?1:.5;
+  $("#bGo").textContent=selectionMode==="new"?"Start Chapter 1":selectionMode==="change"?"Switch character":"Let's go!";
+}
+document.querySelectorAll(".card").forEach(card=>{
+  card.append(el("span","character-best"));
+  card.onclick=()=>{selectedCharacter=card.dataset.c;updateSelection()};
+});
+$("#bCancelSelect").onclick=()=>show("title");
+$("#bGo").onclick=()=>{
+  if(!selectedCharacter)return;
+  const key=CHAPTER.id+"-"+selectedCharacter;
+  if(selectionMode==="new"&&S.runs[key]){
+    if(!confirm("Restart this character’s story? Their current checkpoint will be replaced. Best stars, learned phrases, settings and the other character’s save are kept."))return;
+    delete S.runs[key];
+  }
+  S.c=selectedCharacter;
+  save();
+  if(selectionMode==="change")show("title");
+  else startLesson();
+};
 $("#bQuit").onclick=()=>{try{speechSynthesis.cancel()}catch(e){}$("#lesson").classList.remove("on");show("title")};
 const toggles={tTr:"tr",tSlow:"slow",tEnglish:"english"};
 function syncTogs(){
@@ -618,7 +913,15 @@ function syncTogs(){
 }
 $("#bSettings").onclick=()=>{findVoice();$("#voiceNote").textContent=greekVoice?"Greek voice found ✓":"No Greek voice found on this device. On iPhone: Settings → Accessibility → Spoken Content → Voices → Greek.";syncTogs();$("#settings").classList.add("on")};
 $("#bClose").onclick=()=>$("#settings").classList.remove("on");
-$("#bChange").onclick=()=>{$("#settings").classList.remove("on");openSelect()};
+$("#bChange").onclick=()=>{$("#settings").classList.remove("on");openSelect("change")};
+
+$("#bReset").onclick=()=>{
+  if(!confirm("Erase both characters’ checkpoints, best stars and learned phrases? Audio and language settings will be kept."))return;
+  Object.assign(S,{runs:{},best:{m:0,f:0},phrases:{},completedLessons:[],visited:{m:false,f:false},legacyFigs:0});
+  save();
+  $("#settings").classList.remove("on");
+  show("title");
+};
 
 show("title");
 

@@ -2,7 +2,7 @@
 
 ## Open the game
 
-Use the private HTTPS playtest link shared with the preview owner, then sign in with the ChatGPT account that owns the preview. GitHub Pages uses the development branch with the **Chapter 1 playtest** workflow. Its expected URL is [bigdavegaming.github.io/SidariQuest](https://bigdavegaming.github.io/SidariQuest/).
+Open the public [Chapter 1 playtest](https://bigdavegaming.github.io/SidariQuest/) in Safari. The deployment follows `feature/chapter1-mobile-playtest`.
 
 If Pages is disabled, a repository administrator can open [Settings → Pages](https://github.com/BigDaveGaming/SidariQuest/settings/pages), select **GitHub Actions** under **Build and deployment → Source**, and allow `feature/chapter1-mobile-playtest` in the `github-pages` environment's deployment branch policy if restrictions are enabled. Then re-run the latest **Chapter 1 playtest** workflow from [Actions](https://github.com/BigDaveGaming/SidariQuest/actions). If there is no run to re-run, push a commit to the development branch to trigger it. Verify the run's deployment URL before sharing it.
 
@@ -16,12 +16,13 @@ Open http://localhost:8000/. Loopback works for desktop service-worker testing. 
 
 ## iPhone checklist
 
-1. Open the game in Safari in portrait. Confirm the title, menu and character cards fit with the address bar visible. Pick either character. Scroll the dialogue after a wrong answer and check that **Try again** stays reachable.
-2. At the hire desk, pick two different wrong greetings and read both reactions. Check that you must choose **Καλημέρα!** before you can continue. Try an incorrect word order when asking for the van.
-3. Leave at the hire desk, reload, and choose **Continue Adventure**. Check the checkpoint, pronunciation and translation settings. Finish the apartment and mini-market scenes and note your final fig total.
-4. Open the phrasebook, replay Chapter 1, and check that the balance stays fixed. Choose the other character and check **Είμαι έτοιμος** for Dave and **Είμαι έτοιμη** for Sharon.
-5. Try a speaker button with a Greek iOS voice available. In Settings, check the slow-audio toggle. If the speaker is disabled, look for a Greek voice under iOS accessibility speech settings. Voice availability and offline speech depend on the device.
-6. With the game first fully loaded online, close it and reopen it in Airplane Mode. Repeat from the Home Screen after using Safari’s **Share → Add to Home Screen**. Check the icon, loading, safe areas, both title and dialogue controls, and whether the device’s Greek voice works offline.
+1. Open Safari in portrait. Play Final Approach, reload during a line, and resume. On replay, check the option to skip the prologue.
+2. At the hire desk, choose **Καλή όρεξη!** as Dave and as Sharon. Check the Greek, literal English, Spyros’s reply, the two character lines, the explanation and **Have another go**. Explore another wrong choice.
+3. Tap the phrasebook word chips and try **Play slowly** using a Greek iOS voice. At the word bank, drag a tile to the answer, reorder it and drag it back. Check the tap alternatives.
+4. Play through the breakfast, dinner and kitchen reveal. Finish the three-question Greek challenge. On replay, open a challenge hint and verify that an earlier best rating stays saved.
+5. Check the Greek text on the painted boards, on both the van hire and arrivals art. Try short and tall portrait screens and check that controls stay reachable.
+6. In Settings, change characters and return to each saved checkpoint. Confirm that cancelling New Game keeps the old checkpoint and that accepting it restarts only the selected character. Only test Reset Progress with a disposable save.
+7. After a full online load, reopen in Airplane Mode, including once from Safari’s **Share → Add to Home Screen**. Check the icon, safe areas, saved progress, and whether the device’s own Greek voice works offline.
 
 Report a bug through [GitHub Issues](https://github.com/BigDaveGaming/SidariQuest/issues/new) or on the playtest pull request. Include the testing URL, iPhone model, iOS version, Safari tab or Home Screen, player character, scene, exact taps, expected result, actual result, and a screenshot or short recording if practical. Mention whether this was a fresh or resumed game, and whether you were offline.
 
@@ -34,4 +35,6 @@ python tests/playtest.py --engine chromium
 python tests/playtest.py --engine webkit
 ```
 
-The test serves the project under a GitHub Pages-style subpath. It checks both characters, two distinct wrong choices, incorrect tile order and retry, reload after both incorrect and correct answers, phrasebook, replay rewards, saved settings, manifest icon dimensions, offline navigation and small/large viewports. Physical iPhone safe-area, Home Screen and system voice behavior require on-device testing.
+The test serves the project under a GitHub Pages-style subpath. It covers both characters, the exact wrong-greeting dialogue, challenge hints and rating, save migration, independent restarts, pointer reorder and touch-button alternatives, viewport checks, and offline navigation after the server stops. Physical iPhone safe-area, Home Screen and system voice behavior require on-device testing.
+
+Legacy completion was stored as a shared flag. The upgrade records a one-star completion for the selected character when that flag is present, keeps both checkpoints and the learned phrase list, and retains the former fig count as history without using it for ratings. The other character earns stars in their own challenge.
