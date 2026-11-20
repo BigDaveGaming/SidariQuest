@@ -76,6 +76,13 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
         assert page.evaluate("run.step") == step["id"]
         kind = step["t"]
         if page.locator("#cast").is_visible():
+            body = page.locator("#daveBody")
+            if character == "m":
+                expected = "assets/dave_full.webp" if step.get("prop") == "magnet" else "assets/dave_full_no_magnet.webp"
+                assert body.get_attribute("src") == expected
+                page.wait_for_function("document.querySelector('#daveBody').naturalWidth > 0")
+            else:
+                assert body.is_hidden()
             local = page.locator("#localFigure").get_attribute("alt")
             if local not in locals_seen:
                 page.wait_for_function("document.querySelector('#localFigure').naturalWidth > 0")
@@ -111,6 +118,9 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
         if kind == "q":
             if explore and step["phrase"] == "morning":
                 option(panel, "Καλή όρεξη!").tap()
+                if character == "m":
+                    assert body.get_attribute("src") == "assets/dave_full_no_magnet.webp"
+                    assert page.locator("#player").get_attribute("src") == "assets/dave_full_cringe.webp"
                 assert panel.get_by_text("YOU SAID: Enjoy your meal!", exact=True).is_visible()
                 assert panel.locator(".said-greek").inner_text() == "Καλή όρεξη!"
                 assert [x.split(" ", 1)[0] for x in panel.locator(".reaction-line").all_inner_texts()] == (

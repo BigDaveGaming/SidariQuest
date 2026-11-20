@@ -56,8 +56,8 @@ button{font-family:inherit;cursor:pointer}
 .scene{position:relative;flex:1;min-height:0;overflow:hidden;container-type:size}
 .bg{position:absolute;inset:0}
 .gsign{position:absolute;left:18%;right:18%;top:17%;padding:5px 6px;background:#fff;border:3px solid var(--blue);border-radius:6px;text-align:center;color:var(--blue);font-weight:900;font-size:clamp(12px,3.6vw,17px);letter-spacing:.5px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
-.player.bump{animation:bump .35s}
-.player.shake{animation:shake .4s}
+.player-actor.bump{animation:bump .35s}
+.player-actor.shake{animation:shake .4s}
 @keyframes bump{50%{transform:translateY(-12px) scale(1.03)}}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 
@@ -162,6 +162,20 @@ button{font-family:inherit;cursor:pointer}
   display:block;width:auto;height:100%;max-width:100%;object-fit:contain;object-position:center top;
   filter:drop-shadow(1px 2px 2px rgba(33,24,15,.26));
 }
+.actor.player-actor.dave-composite{
+  width:min(55%,calc(var(--figure-height) * .523));
+}
+.actor.dave-composite img{width:100%;height:auto;max-width:none}
+.dave-composite .dave-expression{
+  position:absolute;inset:0;
+  -webkit-mask-image:radial-gradient(ellipse 23% 13% at 54% 12%,#000 68%,transparent 100%);
+  mask-image:radial-gradient(ellipse 23% 13% at 54% 12%,#000 68%,transparent 100%);
+}
+#end .dave-composite{
+  position:relative;display:inline-block;vertical-align:top;
+  width:min(48%,150px);
+}
+#end .dave-composite img{width:100%;display:block}
 .actor.local{
   left:var(--local-x);top:calc(var(--head-top) + var(--local-drop));
   height:calc(var(--figure-height) * .88);max-width:45%;z-index:1;
@@ -247,7 +261,7 @@ button{font-family:inherit;cursor:pointer}
   <h1>Who are you playing as?</h1>
   <p class="sub" id="selectionNote">This decides whether you learn the man's or woman's form of Greek words.</p>
   <div class="cards">
-    <button class="card" data-c="m"><img src="assets/dave_full.webp" alt=""><div class="nm">Big Dave</div><div class="gr" lang="el">είμαι έτοιμος</div></button>
+    <button class="card" data-c="m"><img src="assets/dave_full_no_magnet.webp" alt=""><div class="nm">Big Dave</div><div class="gr" lang="el">είμαι έτοιμος</div></button>
     <button class="card" data-c="f"><img src="assets/sharon_full.webp" alt=""><div class="nm">Gobby Sharon</div><div class="gr" lang="el">είμαι έτοιμη</div></button>
   </div>
   <button class="btn play go" id="bGo" disabled style="opacity:.5">Let's go!</button>
@@ -271,7 +285,10 @@ button{font-family:inherit;cursor:pointer}
       <span class="airport-board"><span lang="el">ΕΞΟΔΟΣ</span><small>Exit</small></span>
     </div>
     <div class="cast" id="cast" hidden>
-      <div class="actor"><img class="player" id="player" alt=""></div>
+      <div class="actor player-actor" id="playerActor">
+        <img id="daveBody" alt="" hidden>
+        <img id="player" alt="">
+      </div>
       <div class="actor local" id="localActor"><img id="localFigure" alt=""></div>
       <div class="market-counter" aria-hidden="true"></div>
     </div>
@@ -408,7 +425,7 @@ const LOCAL_FIGURES={
 };
 let run, runKey, idx, speaker;
 const steps=[...STORY_STEPS,...CHALLENGE];
-const player=$("#player"), panel=$("#panel");
+const player=$("#player"), playerActor=$("#playerActor"), daveBody=$("#daveBody"), panel=$("#panel");
 const PLAYER_REACTIONS=["pleased","cringe","confused","shocked","talking","fuming"];
 const playerName=()=>S.c==="f"?"sharon":"dave";
 const playerPath=(expression="neutral")=>{
@@ -420,11 +437,15 @@ function react(animation,expression){
     const next=playerPath(expression);
     if(player.getAttribute("src")!==next)player.src=next;
   }
-  player.classList.remove("bump","shake");
-  if(animation){void player.offsetWidth;player.classList.add(animation)}
+  playerActor.classList.remove("bump","shake");
+  if(animation){void playerActor.offsetWidth;playerActor.classList.add(animation)}
 }
 function artPath(name){return name && GAME_ART.includes(name) ? `assets/${name}.webp` : ""}
 function startLesson(){
+  const isDave=S.c==="m";
+  playerActor.classList.toggle("dave-composite",isDave);
+  player.classList.toggle("dave-expression",isDave);
+  daveBody.hidden=!isDave;
   player.src=playerPath();
   for(const expression of PLAYER_REACTIONS){
     const image=new Image();
@@ -482,6 +503,10 @@ function render(){
     localFigure.classList.toggle("mirror",speaker!=="Spyros Rent-a-Van");
     $("#localActor").dataset.character=LOCAL_FIGURES[speaker].replace(/_full$/,"");
     localFigure.alt=speaker;
+  }
+  if(S.c==="m"){
+    const body=artPath(st.prop==="magnet"?"dave_full":"dave_full_no_magnet");
+    if(daveBody.getAttribute("src")!==body)daveBody.src=body;
   }
   react(null,st.kind==="meaning"?"confused":"neutral");
   updateTop();
@@ -844,7 +869,15 @@ function finish(){
   save();
   const w=$("#endWrap"), f=el("img","face");
   f.alt="";f.src=playerPath("pleased");
-  w.replaceChildren(el("h1",null,"Chapter 1 complete"),f,
+  let portrait=f;
+  if(S.c==="m"){
+    portrait=el("div","dave-composite");
+    const body=el("img");
+    body.alt="";body.src=artPath("dave_full_no_magnet");
+    f.className="dave-expression";
+    portrait.append(body,f);
+  }
+  w.replaceChildren(el("h1",null,"Chapter 1 complete"),portrait,
     el("div","score",`Greek challenge: ${"★".repeat(stars)}`),
     el("div","line",`Best · Dave ${starLabel("m")} · Sharon ${starLabel("f")}`),
     phraseList(Object.entries(S.phrases)));

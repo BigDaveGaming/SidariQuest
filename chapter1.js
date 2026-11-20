@@ -86,7 +86,7 @@ const CHAPTER={
       why:{m:"έτοιμος is the man's form. Sharon would say έτοιμη.",f:"έτοιμη is the woman's form. Dave would say έτοιμος."},
       badOptions:[{m:"Spyros holds the keys out to Sharon. Dave puts his hand up like he’s back at school.",f:"Spyros holds the keys out to Dave. Sharon intercepts them with one eyebrow."},{m:"Spyros offers Dave the chair. It’s the first thing Dave’s negotiated successfully all morning.",f:"Spyros points Sharon to a chair. She hands Dave the cases and takes the offer."}],
       learn:[{m:"Είμαι έτοιμος",f:"Είμαι έτοιμη"},"I'm ready"]},
-    {id:"legacy-19",t:"narr",text:"{P} slaps two Union Jack magnets on the van doors."},
+    {id:"legacy-19",t:"narr",prop:"magnet",text:"Dave holds up his Union Jack magnets. A minute later there’s one on each van door."},
     {id:"legacy-20",t:"q",kind:"meaning",gr:"Προσέξτε το βαν, σας παρακαλώ!",prompt:"What did Spyros just say?",
       opts:[{en:"Please be careful with the van!",ok:1},{en:"Please bring it back with a full tank!"},{en:"Please park it over there!"}],
       why:"Προσέξτε = be careful, watch out. On signs you'll see ΠΡΟΣΟΧΗ (caution).",

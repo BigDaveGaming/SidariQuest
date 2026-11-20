@@ -35,7 +35,7 @@ def convert(path, name, size=None, transparent=False, bounds=(1024, 1536)):
         available.append(name)
 
 
-def convert_full_body(path, name, frame=None):
+def convert_full_body(path, name, frame=None, crop=None):
     if not path.is_file():
         return
     with Image.open(path) as master:
@@ -44,7 +44,11 @@ def convert_full_body(path, name, frame=None):
         if alpha.getextrema() != (0, 255):
             raise ValueError(f"{path}: needs transparent margins and an opaque figure")
         image.putalpha(alpha)
-        image = ImageOps.expand(image.crop(alpha.getbbox()), border=16)
+        if crop:
+            bounds = tuple(round(edge * image.size[i % 2]) for i, edge in enumerate(crop))
+        else:
+            bounds = alpha.getbbox()
+        image = ImageOps.expand(image.crop(bounds), border=16)
         if frame:
             image = image.resize(frame, Image.Resampling.LANCZOS)
         else:
@@ -76,6 +80,12 @@ for character in ("dave", "sharon"):
     name = f"{character}_full"
     path = approved / "characters" / f"{name}.png"
     frame = convert_full_body(path if path.is_file() else RAW / "characters" / path.name, name)
+    if character == "dave":
+        with Image.open(path if path.is_file() else RAW / "characters" / path.name) as original:
+            alpha = original.convert("RGBA").getchannel("A")
+            bounds = alpha.point(lambda n: 255 if n >= 8 else 0).getbbox()
+            crop = tuple(edge / original.size[i % 2] for i, edge in enumerate(bounds))
+        convert_full_body(approved / "characters/dave_full_no_magnet.png", "dave_full_no_magnet", frame, crop)
     for reaction in REACTIONS:
         name = f"{character}_full_{reaction}"
         convert_full_body(approved / "characters" / f"{name}.png", name, frame)
