@@ -236,6 +236,11 @@ button{font-family:inherit;cursor:pointer}
 .panel.has-hint .q-head,.panel.has-hint>.prompt{padding-right:54px}
 .hint-btn{position:absolute;top:10px;right:max(12px,env(safe-area-inset-right));z-index:3;width:46px;height:46px;border-radius:50%;border:3px solid var(--deep);background:#fff3d7;font-size:21px;box-shadow:0 3px 0 var(--deep);padding:0}
 .hint-btn:active{transform:translateY(2px);box-shadow:none}
+.hint-btn.is-new{animation:glow 1.8s ease-in-out infinite}
+.hint-new{position:absolute;right:52px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:11px;font-weight:800;color:#fff;background:var(--sun);padding:3px 8px;border-radius:10px}
+@keyframes glow{50%{box-shadow:0 3px 0 var(--deep),0 0 0 6px rgba(240,122,58,.35)}}
+.panel.has-new-hint .q-head,.panel.has-new-hint>.prompt{padding-right:150px}
+.added-toast{display:block;margin:8px 0 0;border:2px dashed #cdbb94;background:#fff8e6;border-radius:12px;padding:8px 12px;font-weight:800;font-size:14px;color:var(--deep);width:100%;text-align:left;min-height:44px}
 .hint-sheet{width:min(94%,420px);max-height:92%;overflow-y:auto;padding:16px 12px}
 .hint-sheet .note{margin:0 0 10px;text-align:center}
 #lesson.teaching .panel{max-height:86%;flex-basis:auto}
@@ -510,6 +515,9 @@ function startLesson(){
   }
   runKey=`${CHAPTER.id}-${S.c}`;
   const saved=S.runs[runKey];
+  // Saves from the forced-card version may point at a card; resume at that phrase's moment.
+  const cardPhrase=/^teach-(.+)$/.exec(saved?.step||"")?.[1];
+  if(cardPhrase)saved.step=(steps.find(step=>step.phrase===cardPhrase)||{}).id;
   const checkpoint=steps.findIndex(step=>step.id===saved?.step);
   run=checkpoint>=0 ? saved : newRun();
   if(checkpoint<0)run.skipIntro=!!S.visited[S.c];
@@ -562,24 +570,13 @@ function render(){
     localFigure.alt=speaker;
   }
   daveProp=st.prop||null;
-  $("#lesson").classList.toggle("teaching",st.t==="teach");
-  panel.classList.remove("has-hint");
+  panel.classList.remove("has-hint","has-new-hint");
   react(null,st.kind==="meaning"?"confused":"neutral");
   updateTop();
   panel.replaceChildren();
   panel.scrollTop=0;
   if(st.t==="cutscene"){renderCutscene(st);return}
-  if(st.t==="teach"){
-    // A phrase pops up as a card only the first time. After that it lives behind 📖.
-    if(isKnown(st.phrase)&&!shownCards.has(st.phrase)){run.learned[st.phrase]=true;advance();return}
-    renderTeach(st);return;
-  }
   if(st.t==="challenge"){renderChallenge(st);return}
-  if(st.phrase && !run.learned[st.phrase] && !isKnown(st.phrase)){
-    // Older checkpoints may resume after the new phrasebook beat.
-    renderTeach(PHRASES[st.phrase],true);
-    return;
-  }
   if(st.t==="narr"||st.t==="me"){
     if(st.t==="me"){
       react("bump",st.reaction||"talking");
@@ -635,6 +632,8 @@ function render(){
 }
 function feedback(st,ok,joke,choice,wrong=0){
   const previous=run.answers[st.id];
+  const card=PHRASES[st.phrase];
+  const isNew=ok&&card&&!isKnown(st.phrase);
   if(ok){
     if(previous!=="first"&&previous!=="retried")run.answers[st.id]=previous==="missed"?"retried":"first";
     if(st.learn){
@@ -644,47 +643,43 @@ function feedback(st,ok,joke,choice,wrong=0){
   }else{
     run.answers[st.id]="missed";
   }
+  if(ok&&card)S.phrases[fill(card.gr)]=fill(card.en);
   save();
   const expression=ok?(st.reaction||"pleased"):wrong===1?"confused":"cringe";
   react(ok?"bump":"shake",expression);
   const fb=el("div","fb "+(ok?"good":"bad"));
-  fb.append(reactionFace(expression));
   fb.setAttribute("role","status");
+  fb.append(reactionFace(expression));
   if(!ok){
+    // You say the wrong thing, the joke plays out, you try again.
     const correct=st.opts?.find(option=>option.ok);
-    if(choice?.gr){
-      const said=el("p","answer-meaning");
-      said.textContent=`YOU SAID: ${fill(choice.en)}`;
-      const greek=el("p","said-greek");
-      greek.lang="el";greek.textContent=fill(choice.gr);
-      fb.append(said,greek);
-    }else if(choice){
-      fb.append(el("p","answer-meaning",`You chose “${fill(choice.en)}”.`));
-    }
+    const explanation=choice?.gr
+      ? `You just ${fill(choice.gr).endsWith(";")?"asked":"said"} “${fill(choice.en)}”`
+      : st.t==="build" ? "That's not quite the sentence." : `It means “${fill(correct.en)}”`;
+    fb.append(el("p","answer-meaning",explanation));
     const exchange=choice?.exchange?.[S.c];
     if(exchange){
       for(const [character,line] of exchange)fb.append(dialogueLine(character,line));
     }else{
-      if(speaker)fb.append(dialogueLine(speaker,st.replies?.[wrong] || "Let's try that again."));
+      if(speaker&&st.replies?.[wrong])fb.append(dialogueLine(speaker,st.replies[wrong]));
       fb.append(el("p","reaction-line",fill(joke||st.bad||{
         m:"Spyros studies the jumble of words. Dave’s ready to draw him a van.",
         f:"Spyros reaches for a pen. Sharon catches herself about to spell VAN in English."
       })));
     }
-    const card=PHRASES[st.phrase];
-    const correction=el("p","correction");
-    correction.textContent=choice?.exchange
-      ? "Καλή όρεξη! means “Enjoy your meal!” For this morning greeting, say Καλημέρα! (“Good morning!”)."
-      : `Try ${fill(card?.gr || correct?.gr || st.answer)} · ${fill(card?.en || correct?.en)}. ${fill(st.why)}`;
-    fb.append(correction);
   }else{
     fb.append(el("b",null,fill(st.good||"Σωστά! — Correct!")),document.createTextNode(fill(st.why)));
   }
   panel.append(fb);
+  if(isNew){
+    const added=el("button","added-toast","📖 Added to your phrasebook");
+    added.onclick=()=>openCard(st.phrase);
+    panel.append(added);
+  }
   if(ok){
     panel.append(nextBtn());
   }else{
-    const retry=el("button","btn play next","Have another go");
+    const retry=el("button","btn play next","Try again");
     retry.onclick=()=>{render();panel.querySelector("button")?.focus({preventScroll:true})};
     panel.append(retry);
   }
@@ -701,7 +696,7 @@ function renderCutscene(st){
   const index=run.cutscene||0;
   const [character,text,greek]=st.lines[index];
   panel.append(el("div","who","Final Approach"));
-  if(index===0)panel.append(el("p","note","Sharon taps through her last Duolingo question as they descend towards Corfu."));
+  if(index===0)panel.append(el("p","note","Sharon taps through one last question on her language app as they descend towards Corfu."));
   const line=el("div","cutscene-line");
   if(character){
     const avatar=el("span","cutscene-avatar");
@@ -727,7 +722,6 @@ function renderCutscene(st){
 }
 
 /* ---------- phrasebook: flip cards, checks and hints ---------- */
-const shownCards=new Set();
 function isKnown(phrase){const card=PHRASES[phrase];return !!card && Object.prototype.hasOwnProperty.call(S.phrases,fill(card.gr))}
 function phraseCard(st,{onFlip}={}){
   const greek=fill(st.gr);
@@ -775,109 +769,36 @@ function phraseCard(st,{onFlip}={}){
   return card;
 }
 
+function openCard(phrase,note=""){
+  $("#hintNote").textContent=note;
+  $("#hintNote").hidden=!note;
+  $("#hintBody").replaceChildren(phraseCard(PHRASES[phrase]));
+  $("#hintSheet").classList.add("on");
+  speak(fill(PHRASES[phrase].gr));
+  $("#bHintClose").focus({preventScroll:true});
+}
+// The phrasebook is always there but never forced. New phrases get a gentle glow.
 function hintButton(phrase,onOpen){
-  const button=el("button","hint-btn","📖");
-  button.setAttribute("aria-label","Phrasebook hint");
-  button.title="Phrasebook hint";
+  const isNew=!isKnown(phrase)&&!onOpen;
+  const button=el("button","hint-btn"+(isNew?" is-new":""),"📖");
+  button.setAttribute("aria-label",isNew?"New phrase: open the phrasebook":"Phrasebook hint");
+  button.title=isNew?"New phrase":"Phrasebook hint";
+  if(isNew)button.append(el("span","hint-new","New phrase"));
   panel.classList.add("has-hint");
+  panel.classList.toggle("has-new-hint",isNew);
   button.onclick=()=>{
     onOpen?.();
-    $("#hintNote").textContent="Using the phrasebook means no star for this one.";
-    $("#hintNote").hidden=!onOpen;
-    $("#hintBody").replaceChildren(phraseCard(PHRASES[phrase]));
-    $("#hintSheet").classList.add("on");
-    speak(fill(PHRASES[phrase].gr));
-    $("#bHintClose").focus({preventScroll:true});
+    button.classList.remove("is-new");
+    panel.classList.remove("has-new-hint");
+    openCard(phrase,onOpen?"Using the phrasebook means no star for this one.":"");
   };
   return button;
 }
 $("#bHintClose").onclick=()=>$("#hintSheet").classList.remove("on");
 
-function teachBlock(){
-  let first=idx,last=idx;
-  while(first>0&&steps[first-1].t==="teach")first--;
-  while(last<steps.length-1&&steps[last+1].t==="teach")last++;
-  return steps.slice(first,last+1).filter(card=>!isKnown(card.phrase)||shownCards.has(card.phrase));
-}
-function renderTeach(st,atCheckpoint=false){
-  shownCards.add(st.phrase);
-  $("#lesson").classList.add("teaching");
-  const block=atCheckpoint?[st]:teachBlock();
-  const position=Math.max(0,block.indexOf(st)), lastCard=position===block.length-1;
-  if(block.length>1){
-    const dots=el("div","pb-dots");
-    block.forEach((_,index)=>dots.append(el("i",index===position?"on":null)));
-    dots.append(document.createTextNode(` ${position+1} of ${block.length}`));
-    panel.append(dots);
-  }
-  const got=el("button","btn play next",lastCard?"Got it · test me":"Got it");
-  got.hidden=true;
-  panel.append(phraseCard(st,{onFlip:flipped=>{if(flipped)got.hidden=false}}),got);
-  speak(fill(st.gr));
-  got.onclick=()=>{
-    got.disabled=true;
-    run.learned[st.phrase]=true;
-    save();
-    if(!lastCard){advance();return}
-    runChecks(block,()=>{atCheckpoint?render():advance()});
-  };
-}
-// The check comes after the cards, with the English out of sight.
-function runChecks(cards,done,number=0){
-  if(number>=cards.length){done();return}
-  const card=cards[number], greek=fill(card.gr), english=fill(card.en);
-  panel.replaceChildren();panel.scrollTop=0;
-  $("#lesson").classList.add("teaching");
-  const head=el("div","q-head");
-  head.append(el("div","who",cards.length>1?`Quick check · ${number+1} of ${cards.length}`:"Quick check"));
-  findVoice();
-  if(greekVoice){
-    const listen=el("div","check-listen"), button=audioButton(greek);
-    listen.append(button,el("div","prompt","Listen. What does it mean?"));
-    const reveal=el("button","reveal","Show the Greek");
-    reveal.onclick=()=>reveal.replaceWith(greekBlock(greek,false));
-    head.append(listen,reveal);
-    speak(greek);
-  }else{
-    head.append(greekBlock(greek),el("div","prompt","What does this mean?"));
-  }
-  panel.append(head);
-  const wrongAnswers=(card.distractors||[]).map(fill).filter(text=>text!==english).slice(0,2);
-  const box=el("div","opts");
-  for(const label of shuffle([english,...wrongAnswers])){
-    const button=el("button","opt",label);
-    button.onclick=()=>{
-      for(const choice of box.children)choice.disabled=true;
-      const ok=label===english;
-      button.classList.add(ok?"right":"wrong");
-      if(!ok)[...box.children].find(choice=>choice.textContent===english)?.classList.add("right");
-      const fb=el("div","fb "+(ok?"good":"bad"));
-      fb.setAttribute("role","status");
-      fb.append(reactionFace(ok?"pleased":"cringe"));
-      if(ok){
-        S.phrases[greek]=english;save();
-        fb.append(el("b",null,"Σωστά! — Correct!"),document.createTextNode(`${greek} = ${english}`));
-        react("bump","pleased");
-      }else{
-        // Not marked as known, so the card comes back next time.
-        fb.append(el("b",null,"Not quite."),document.createTextNode(`${greek} means “${english}”.`));
-        react("shake","cringe");
-      }
-      const next=el("button","btn play next",number===cards.length-1?"Back to the story":"Next check");
-      next.onclick=()=>{next.disabled=true;runChecks(cards,done,number+1)};
-      panel.append(fb,next);
-      fb.scrollIntoView({block:"nearest"});
-    };
-    box.append(button);
-  }
-  panel.append(box);
-}
-
 function renderChallenge(st){
   const card=PHRASES[st.phrase];
   const required=[st.phrase,...st.alternatives];
-  const unlearned=required.find(phrase=>!run.learned[phrase]&&!isKnown(phrase));
-  if(unlearned){renderTeach(PHRASES[unlearned],true);return}
   const number=CHALLENGE.indexOf(st)+1;
   panel.append(el("h2",null,"Greek challenge"),
     el("p","note",`Question ${number} of ${CHALLENGE.length}. Only this challenge counts for your stars.`));

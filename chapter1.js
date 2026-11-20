@@ -25,7 +25,7 @@ const CHAPTER={
   id:"chapter1",
   steps:[
     {id:"legacy-0",t:"cutscene",scene:"landing",lines:FINAL_APPROACH},
-    {id:"legacy-1",t:"narr",scene:"baggage",text:{m:"The carousel makes one last turn. Dave’s case appears. Two pairs of shorts, one shirt and enough van magnets to rebrand the entire airport. Sharon reckons all those Duolingo sessions in the bath have prepared her for whatever comes next.",f:"The carousel makes one last turn. Sharon grabs the case. If Duolingo in the bath has taught her one thing, it’s that she’s definitely ready for this."}},
+    {id:"legacy-1",t:"narr",scene:"baggage",text:{m:"The carousel makes one last turn. Dave’s case appears. Two pairs of shorts, one shirt and enough van magnets to rebrand the entire airport. Sharon reckons all those language-app sessions in the bath have prepared her for whatever comes next.",f:"The carousel makes one last turn. Sharon grabs the case. If the language app in the bath has taught her one thing, it’s that she’s definitely ready for this."}},
     {id:"legacy-2",t:"narr",scene:"arrivals",text:"The rep points to the transfer coach. Dave eyes the queue and heads for the hire office. Sharon follows. Someone has to read the paperwork."},
     {id:"legacy-3",t:"narr",scene:"van",wide:true,text:"Corfu Airport. 35°C. A white van sits outside the hire office. Dave booked it months ago and brought the magnets. Sharon has a battered Greek for Beginners phrasebook from the airport. Dave has already scribbled “ASK FOR LOCAL PRICE” in it."},
     {id:"legacy-4",t:"q",kind:"sign",sign:"ΕΝΟΙΚΙΑΣΕΙΣ ΑΥΤΟΚΙΝΗΤΩΝ",prompt:"What does the sign say?",
@@ -193,11 +193,27 @@ const LOCAL_REPLIES = {
 };
 
 // Hand-written wrong answers for cards whose story step has no options.
-const CHECK_DISTRACTORS = {
-  van: ["I'd like a car", "I've got a van"],
-  kitchen: ["There's no kitchen!", "There's a restaurant!"],
-  // The story's other "ready" option means the same thing in the other gender form.
-  ready: ["I'm tired!", "Are you ready?"]
+// Phrasebook notes: what Dave scribbled in the margin before the trip.
+// About the Greek only: no story events, reactions or wrong answers.
+const CARD_TIPS = {
+  sign: "You'll see this one on every hire place on the island.",
+  morning: "Καλημέρα till lunchtime. After that it's καλησπέρα.",
+  booking: "Στο όνομα… = in the name of… Works for hotels and tavernas too.",
+  van: "Θα ήθελα = I'd like. Politer than θέλω (I want). Βαν is just van.",
+  days: "Πόσες = how many. Μέρες = days.",
+  september: "Μέχρι = until. Months: Μάιος, Ιούνιος… Σεπτέμβριος.",
+  "van-price": "Πόσο κοστίζει; = how much does it cost? Add τον μήνα for per month.",
+  "monthly-charge": "Εξακόσια = six hundred. Τον μήνα = per month.",
+  handover: "Ορίστε = here you are. Greeks answer the phone with it too.",
+  ready: {m:"Men say έτοιμος. Shaz says έτοιμη.", f:"Women say έτοιμη. Dave says έτοιμος."},
+  careful: "Προσέξτε = watch out. On signs: ΠΡΟΣΟΧΗ.",
+  thank: "Talking TO Spyros, his name changes: κύριε Σπύρο.",
+  directions: "Πού είναι…; = where is…? Works for anything.",
+  breakfast: "Τι ώρα…; = what time…? Πρωινό = breakfast.",
+  dinner: "Και = and. Βραδινό = dinner.",
+  kitchen: "Κουζίνα = kitchen. Also means the cooking.",
+  water: "Παρακαλώ = please. Stick it on the end of anything.",
+  price: "Πόσο κάνει; Most useful words on the island."
 };
 
 const PHRASES = {};
@@ -207,19 +223,18 @@ const STORY_STEPS = CHAPTER.steps.flatMap(step => {
     const original = CHAPTER.steps.find(item => item.id === source);
     const correct = original.opts?.find(option => option.ok);
     const card = {
-      id: "teach-" + id, phrase: id, t: "teach",
+      id: "card-" + id, phrase: id,
       gr: original.sign ? original.learn[0] : original.gr || original.answer || correct?.gr,
       sign: original.sign,
       en: original.en || correct?.en || original.learn[1],
-      words: gloss.split("|"), tip: tip || original.why,
-      // Quick checks reuse the wrong answers written for that moment in the story.
-      distractors: CHECK_DISTRACTORS[id] || (original.opts || []).filter(option => !option.ok).map(option => option.en)
+      words: gloss.split("|"), tip: CARD_TIPS[id] || tip
     };
     PHRASES[id] = card;
     original.phrase = id;
     return card;
   });
-  return [...cards, step];
+  // Cards are optional: they live behind 📖 and are not steps in the story.
+  return [step];
 });
 
 const CHALLENGE = [

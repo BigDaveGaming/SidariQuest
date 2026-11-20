@@ -13,10 +13,10 @@ The central premise is **“Learn Greek. Cause Chaos.”** The player learns pra
 Dave and Sharon are on a **long summer holiday in Corfu**, not relocating. Remove any prologue references to them moving to or living permanently in Greece.
 
 - Dave heard from a bloke in the pub that speaking Greek gets you “local prices”, supposedly half what tourists pay. **This is false**, and should never be presented as factual travel advice. Dave believes it and keeps seeking imaginary discounts.
-- **Gobby Sharon is NOT the sensible voice of reason**. She is every bit as overconfident as Dave. She thinks she can already speak Greek because she does **Duolingo in the bath**, and she is proud of her streak. She also believes that speaking Greek will help with prices. She has some real vocabulary but often impractical sentences, and makes mistakes herself.
+- **Gobby Sharon is NOT the sensible voice of reason**. She is every bit as overconfident as Dave. She thinks she can already speak Greek because she does **a language app in the bath**, and she is proud of her streak. She also believes that speaking Greek will help with prices. She has some real vocabulary but often impractical sentences, and makes mistakes herself.
 - Dave is convinced he knows enough Greek to save money, hire a van and buy beer. Their competing confidence, mutual teasing and gradual actual learning power the comedy.
 - Sharon says **“luv”**, not “darlin’”. Avoid exaggerated fake Scouse expressions. Locals are generally grounded and sensible; the visitors cause the chaos.
-- The battered Greek phrasebook remains a teaching device; Sharon's Duolingo habit and phrasebook can coexist. Dave's notes can include “ASK FOR LOCAL PRICE”.
+- The battered Greek phrasebook remains a teaching device; Sharon's language-app habit and phrasebook can coexist. Dave's notes can include “ASK FOR LOCAL PRICE”.
 
 ## 2. REPLACE plane-snoring intro: opening cutscene as the plane lands
 
@@ -140,7 +140,7 @@ Any Corfu map (including chapter selection, transitions or decorative location i
 ## 8. Acceptance checks / delivery
 
 1. Physically or via iOS/WebKit-equivalent checks, Chapter 1 is completable as **both characters**; the real iPhone owner will retest.
-2. Plane opening has **awake Dave and Duolingo Sharon**, approved lines, correct long-holiday premise, and is skippable on replay.
+2. Plane opening has **awake Dave and language-app Sharon**, approved lines, correct long-holiday premise, and is skippable on replay.
 3. At van hire, `Καλή όρεξη!` triggers the **exact** approved local + Dave/Sharon reactions; “YOU SAID” and “Have another go” remain usable on iPhone.
 4. Other wrong answers still yield distinctive funny reactions, and are accessible on replay.
 5. No fig points are awarded; stars are based on a brief end-chapter Greek assessment, **not on exploratory wrong story choices**. Saved best rating never decreases.
@@ -151,3 +151,6 @@ Any Corfu map (including chapter selection, transitions or decorative location i
 10. Open/update PR for review. **Do not auto-merge.**
 
 **Scope priority:** (1) preserve comedy + exact dialogue and plane prologue; (2) save/replay flows; (3) stars + migration; (4) Round 2 teaching/UI; (5) map/art polish. Preserve the working build at each step.
+
+
+> **Naming rule (Mike, Nov 2026):** never name real apps or brands (e.g. Duolingo) in the game. Say "her language app".

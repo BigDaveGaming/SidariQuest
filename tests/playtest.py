@@ -74,11 +74,6 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
     locals_seen = set()
     for step in page.evaluate("steps.slice(1)"):
         kind = step["t"]
-        if kind == "teach" and page.evaluate("run.step") != step["id"]:
-            # Phrases learned on an earlier play skip their card and live behind 📖.
-            assert page.evaluate("(id) => isKnown(id)", step["phrase"])
-            taught.add(step["phrase"])
-            continue
         assert page.evaluate("run.step") == step["id"]
         if page.locator("#cast").is_visible():
             body = page.locator("#player")
@@ -91,27 +86,20 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
             if local not in locals_seen:
                 page.wait_for_function("document.querySelector('#localFigure').naturalWidth > 0")
                 locals_seen.add(local)
-        if kind == "teach":
-            assert panel.locator(".pb-front .pb-head").is_visible()
-            assert panel.get_by_role("button", name="Got it").is_hidden()
-            panel.locator(".pb").tap()
-            page.wait_for_timeout(600)
-            assert panel.locator(".pb.flipped").count() == 1
-            if step["phrase"] == "van" and explore:
-                assert panel.locator(".pb-words dd").first.inner_text() == "would"
-            panel.get_by_role("button", name="Got it").tap()
-            taught.add(step["phrase"])
-            while panel.locator(".q-head .who").filter(has_text="Quick check").count():
-                greek = panel.locator(".q-head .g").first.inner_text()
-                english = page.evaluate(
-                    "(gr) => fill(Object.values(PHRASES).find(card => fill(card.gr) === gr).en)", greek)
-                option(panel, english).tap()
-                assert panel.locator(".fb.good").is_visible()
-                panel.locator(".next").tap()
-            continue
+        if kind in {"q", "build"} and step.get("phrase"):
+            # The phrasebook is optional: a glowing 📖 the first time, never a forced card.
+            hint = panel.locator(".hint-btn")
+            assert hint.is_visible()
+            if explore and step["phrase"] == "van":
+                assert ("is-new" in hint.get_attribute("class")) == (not page.evaluate("isKnown('van')"))
+                hint.tap()
+                card = page.locator("#hintSheet.on .pb")
+                card.tap()
+                page.wait_for_timeout(600)
+                assert page.locator("#hintSheet .pb-words dd").first.inner_text() == "would"
+                page.locator("#bHintClose").tap()
         if kind == "challenge":
             assert panel.get_by_role("heading", name="Greek challenge").is_visible()
-            assert {step["phrase"], *step["alternatives"]} <= taught
             card = page.evaluate("(id) => PHRASES[id]", step["phrase"])
             if help_on_challenge and step["phrase"] == "handover":
                 panel.locator(".hint-btn").tap()
@@ -128,8 +116,6 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
                 assert page.evaluate("run.challenge['challenge-handover'].correct")
             panel.locator(".next").tap()
             continue
-        if kind in {"q", "build"}:
-            assert step["phrase"] in taught
         if kind == "q":
             if explore and step["phrase"] == "morning":
                 option(panel, "Καλή όρεξη!").tap()
@@ -137,8 +123,7 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
                     assert body.get_attribute("src") == "assets/dave_full_no_magnet.webp"
                 assert panel.locator(".fb .react-face img").get_attribute("src") == (
                     "assets/dave_cringe.webp" if character == "m" else "assets/sharon_cringe.webp")
-                assert panel.get_by_text("YOU SAID: Enjoy your meal!", exact=True).is_visible()
-                assert panel.locator(".said-greek").inner_text() == "Καλή όρεξη!"
+                assert panel.get_by_text("You just said “Enjoy your meal!”", exact=True).is_visible()
                 assert [x.split(" ", 1)[0] for x in panel.locator(".reaction-line").all_inner_texts()] == (
                     ["Spyros", "Dave", "Sharon"] if character == "f" else ["Spyros", "Sharon", "Dave"]
                 )
@@ -150,13 +135,15 @@ def play(page, character, *, explore=False, help_on_challenge=False, replay=Fals
                 for line in ["Thank you. But I am not eating.", *expected]:
                     assert panel.get_by_text(line, exact=False).count()
                 assert not panel.get_by_role("button", name="Continue", exact=True).count()
-                panel.get_by_role("button", name="Have another go", exact=True).tap()
+                panel.get_by_role("button", name="Try again", exact=True).tap()
                 option(panel, "Καληνύχτα!").tap()
                 assert panel.get_by_text("Good night? I've only just opened.", exact=False).count()
-                panel.get_by_role("button", name="Have another go", exact=True).tap()
+                panel.get_by_role("button", name="Try again", exact=True).tap()
             correct = next(o for o in step["opts"] if o.get("ok"))
+            was_new = step.get("phrase") and not page.evaluate("(id) => isKnown(id)", step["phrase"])
             option(panel, answer_text(correct.get("gr", correct["en"]), character)).tap()
             assert panel.locator(".fb.good").is_visible()
+            assert panel.get_by_text("📖 Added to your phrasebook").count() == (1 if was_new else 0)
         elif kind == "build":
             words = step["answer"].split()
             bank, row = panel.locator(".tiles"), panel.locator(".answer")
