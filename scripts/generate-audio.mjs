@@ -174,7 +174,9 @@ async function chooseVoices(roles) {
   const {voices} = await (await api("/voices")).json();
   // A voice named in voices.json without an id is pinned to that role by name.
   for (const role of pinned) {
-    const match = voices.find(voice => voice.name.toLowerCase().startsWith(chosen[role].name.toLowerCase()));
+    const wanted = chosen[role].name.toLowerCase();
+    const match = voices.find(voice => voice.name.toLowerCase() === wanted)
+      || voices.find(voice => voice.name.toLowerCase().startsWith(wanted));
     if (!match) throw new Error(`voices.json names "${chosen[role].name}" for ${role}, but that voice isn't in My Voices.`);
     const english = (ROLE_WANTS[role] || {}).english;
     chosen[role] = {id: match.voice_id, name: match.name, labels: match.labels || {}, pinned: true,
