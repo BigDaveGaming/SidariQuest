@@ -167,12 +167,17 @@ async function addLibraryVoices(chosen) {
   const {voices} = await (await api("/voices")).json();
   for (const [role, voice] of wanted) {
     if (voices.some(mine => mine.voice_id === voice.id)) continue;
-    const added = await (await api(`/voices/add/${voice.owner}/${voice.id}`, {
-      method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({new_name: voice.name || role})
-    })).json();
-    if (added.voice_id) voice.id = added.voice_id;
-    console.log(`Added ${voice.name || voice.id} to My Voices for ${role}.`);
+    try {
+      const added = await (await api(`/voices/add/${voice.owner}/${voice.id}`, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({new_name: voice.name || role})
+      })).json();
+      if (added.voice_id) voice.id = added.voice_id;
+      console.log(`Added ${voice.name || voice.id} to My Voices for ${role}.`);
+    } catch (error) {
+      // The key may not be allowed to add voices; the library voice can often still be used directly.
+      console.log(`Couldn't add ${voice.name || voice.id} to My Voices (${error.message.slice(0, 120)}). Trying it directly.`);
+    }
   }
 }
 
