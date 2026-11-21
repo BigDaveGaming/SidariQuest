@@ -28,6 +28,10 @@ on:
         description: "Instead of recording: search the Voice Library for these words (comma separated) and save previews"
         type: string
         default: ""
+      voice_override:
+        description: "Try a voice for this run only (JSON, e.g. {\"Dave\":{\"name\":\"Ricky\"}})"
+        type: string
+        default: ""
       regenerate:
         description: "Lines to record again (exact Greek, one per line)"
         type: string
@@ -75,6 +79,7 @@ jobs:
           SAMPLE_ROLES: ${{ inputs.sample_roles }}
           MODEL: ${{ inputs.model }}
           STABILITY: ${{ inputs.stability }}
+          VOICE_OVERRIDE: ${{ inputs.voice_override }}
         run: node scripts/generate-audio.mjs
       - name: Save them to the repo
         if: ${{ !inputs.dry_run }}
