@@ -160,8 +160,27 @@ async function api(pathname, options = {}) {
   }
 }
 
+// A Voice Library voice can be named by id with its owner ("owner"): it's added to My Voices if needed.
+async function addLibraryVoices(chosen) {
+  const wanted = Object.entries(chosen).filter(([, voice]) => voice?.id && voice?.owner);
+  if (!wanted.length || !KEY) return;
+  const {voices} = await (await api("/voices")).json();
+  for (const [role, voice] of wanted) {
+    if (voices.some(mine => mine.voice_id === voice.id)) continue;
+    const added = await (await api(`/voices/add/${voice.owner}/${voice.id}`, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({new_name: voice.name || role})
+    })).json();
+    if (added.voice_id) voice.id = added.voice_id;
+    console.log(`Added ${voice.name || voice.id} to My Voices for ${role}.`);
+  }
+}
+
 async function chooseVoices(roles) {
   const chosen = readJson(VOICES, {});
+  // VOICE_OVERRIDE='{"Dave":{"id":"…","owner":"…","name":"Ricky"}}' tries a voice for one run without saving it.
+  if (process.env.VOICE_OVERRIDE) Object.assign(chosen, JSON.parse(process.env.VOICE_OVERRIDE));
+  if (!DRY_RUN) await addLibraryVoices(chosen);
   // Roles without a voice, or stuck with an English one, get (re)chosen.
   const pinned = roles.filter(role => chosen[role]?.name && !chosen[role]?.id);
   const missing = roles.filter(role => !pinned.includes(role)) .filter(role => !chosen[role]?.id
