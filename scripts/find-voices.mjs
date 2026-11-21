@@ -38,7 +38,7 @@ for (const voice of voices) {
   n++;
   const file = `${String(n).padStart(2, "0")}-${voice.name.replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).toLowerCase()}.mp3`;
   fs.writeFileSync(path.join(OUT, file), Buffer.from(await preview.arrayBuffer()));
-  list.push(`${file}\t${voice.name}\t${voice.accent || ""}\t${voice.age || ""}\t${(voice.description || voice.descriptive || "").replace(/\s+/g, " ").slice(0, 160)}`);
+  list.push(`${file}\t${voice.voice_id}\t${voice.public_owner_id}\t${voice.name}\t${voice.accent || ""}\t${voice.age || ""}\t${(voice.description || voice.descriptive || "").replace(/\s+/g, " ").slice(0, 160)}`);
 }
 fs.writeFileSync(path.join(OUT, "list.tsv"), list.join("\n") + "\n");
 console.log(`Saved ${list.length} previews:\n${list.join("\n")}`);
