@@ -24,6 +24,10 @@ on:
         description: "Stability override (blank = normal; v3 takes 0, 0.5 or 1)"
         type: string
         default: ""
+      find_voices:
+        description: "Instead of recording: search the Voice Library for these words (comma separated) and save previews"
+        type: string
+        default: ""
       regenerate:
         description: "Lines to record again (exact Greek, one per line)"
         type: string
@@ -54,7 +58,14 @@ jobs:
           node-version: 20
       - name: Check ffmpeg
         run: command -v ffmpeg || (sudo apt-get update -q && sudo apt-get install -y -q ffmpeg)
+      - name: Find voices
+        if: ${{ inputs.find_voices != '' }}
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          SEARCH: ${{ inputs.find_voices }}
+        run: node scripts/find-voices.mjs
       - name: Make the recordings
+        if: ${{ inputs.find_voices == '' }}
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           DRY_RUN: ${{ inputs.dry_run }}
@@ -73,5 +84,5 @@ jobs:
           git add -A assets/audio
           if git diff --cached --quiet; then echo "No new recordings."; exit 0; fi
           count=$(git diff --cached --name-only --diff-filter=A -- 'assets/audio/*.mp3' | wc -l)
-          if [ "${{ inputs.sample }}" = "true" ]; then git commit -m "Add voice samples"; else git commit -m "Add Greek audio ($count new recordings)"; fi
+          if [ -n "${{ inputs.find_voices }}" ]; then git commit -m "Voice Library previews"; elif [ "${{ inputs.sample }}" = "true" ]; then git commit -m "Add voice samples"; else git commit -m "Add Greek audio ($count new recordings)"; fi
           git push origin HEAD:${{ inputs.branch }}
