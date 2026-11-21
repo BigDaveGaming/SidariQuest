@@ -228,7 +228,18 @@ const directionFor = (key, role) => {
   return `${accent} ${base}`.trim();
 };
 // What ElevenLabs is sent: the direction tags, then the line. Only v3 understands tags.
-const spoken = line => MODEL === "eleven_v3" && line.direction ? `${line.direction} ${line.text}` : line.text;
+// A character can use a different model or steadier settings (directions.json "voice": {role: {model, stability}}).
+const modelFor = role => process.env.MODEL || directions.voice?.[role]?.model || "eleven_v3";
+const stabilityFor = role => {
+  const set = process.env.STABILITY || directions.voice?.[role]?.stability;
+  return set === undefined || set === "" ? null : Number(set);
+};
+const settingsFor = role => {
+  const model = modelFor(role), stability = stabilityFor(role);
+  if (model === "eleven_v3") return {stability: stability ?? 0.5};
+  return {stability: stability ?? 0.55, similarity_boost: 0.9, style: 0.3, use_speaker_boost: true};
+};
+const spoken = line => modelFor(line.role) === "eleven_v3" && line.direction ? `${line.direction} ${line.text}` : line.text;
 // Shift a recording by some semitones with ffmpeg (deeper and bigger when negative). Length stays the same.
 const pitchFor = role => Number(directions.pitch?.[role] || 0);
 function shiftPitch(file, semitones, out = file) {
@@ -239,8 +250,8 @@ function shiftPitch(file, semitones, out = file) {
     "-ac", "1", "-b:a", "32k", temp]);
   fs.renameSync(temp, out);
 }
-const fileFor = (text, voiceId, direction, pitch = 0) =>
-  crypto.createHash("sha1").update(`${text}|${voiceId}|${MODEL}|${direction}${pitch ? `|${pitch}` : ""}`).digest("hex").slice(0, 12) + ".mp3";
+const fileFor = (text, voiceId, direction, pitch = 0, model = "eleven_v3", settings = "") =>
+  crypto.createHash("sha1").update(`${text}|${voiceId}|${model}|${direction}${pitch ? `|${pitch}` : ""}${settings}`).digest("hex").slice(0, 12) + ".mp3";
 const slug = text => text.normalize("NFD").replace(/\p{M}/gu, "").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 40).toLowerCase();
 
 async function main() {
@@ -265,7 +276,7 @@ async function main() {
       continue;
     }
     const existing = old[key];
-    const file = voice ? fileFor(text, voice.id, direction, pitchFor(role)) : existing?.file;
+    const file = voice ? fileFor(text, voice.id, direction, pitchFor(role), modelFor(role), directions.voice?.[role] ? JSON.stringify(settingsFor(role)) : "") : existing?.file;
     const recorded = existing && existing.file === file && fs.existsSync(path.join(AUDIO, existing.file));
     if (recorded && !REGENERATE.has(text)) kept[key] = existing;
     else todo.push({key, text, role, voice, direction, file});
@@ -310,9 +321,9 @@ async function main() {
           headers: {"Content-Type": "application/json", "Accept": "audio/mpeg"},
           body: JSON.stringify({
             text,
-            model_id: MODEL,
+            model_id: modelFor(line.role),
             // v3 only accepts 0 (creative), 0.5 (natural) or 1 (robust).
-            voice_settings: MODEL === "eleven_v3" ? {stability: 0.5} : {stability: 0.55, similarity_boost: 0.75}
+            voice_settings: settingsFor(line.role)
           })
         });
         const saved = path.join(AUDIO, line.file);
@@ -343,7 +354,7 @@ async function main() {
         (pitchFor(line.role) ? `<br>original: <audio controls preload="none" src="${line.file.replace("samples/", "").replace(/\.mp3$/, "-original.mp3")}"></audio>` : "") + `</li>`);
     fs.writeFileSync(path.join(SAMPLES, "index.html"), `<!doctype html><meta charset="utf-8">` +
       `<meta name="viewport" content="width=device-width,initial-scale=1"><title>Voice samples</title>` +
-      `<body style="font:16px system-ui;margin:16px"><h1>Voice samples (${MODEL})</h1><ol>${list.join("")}</ol>`);
+      `<body style="font:16px system-ui;margin:16px"><h1>Voice samples (${modelFor(todo[0]?.role)})</h1><ol>${list.join("")}</ol>`);
   }
   if (!DRY_RUN && !SAMPLE) {
     // Keep only lines the game still uses, and remove recordings nothing points to.
